@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { PrismaClient } from '@prisma/client';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 const prisma = new PrismaClient();
 
 export class MatchService {
-  static createMatch: any;
   constructor(private realtime: RealtimeGateway) {}
 
   async checkAndCreateMatch(userAId: string, userBId: string) {
-    // normalize order (VERY IMPORTANT)
+    // Normalize IDs to avoid duplicate match combinations
     const [userOneId, userTwoId] = [userAId, userBId].sort();
 
-    // check if match already exists
-    const existing = await prisma.match.findUnique({
+    // Check existing match
+    const existingMatch = await prisma.match.findUnique({
       where: {
         userOneId_userTwoId: {
           userOneId,
@@ -25,9 +25,11 @@ export class MatchService {
       },
     });
 
-    if (existing) return existing;
+    if (existingMatch) {
+      return existingMatch;
+    }
 
-    // check mutual RIGHT swipes
+    // Check mutual RIGHT swipes
     const [aSwiped, bSwiped] = await Promise.all([
       prisma.swipe.findFirst({
         where: {
@@ -46,38 +48,27 @@ export class MatchService {
       }),
     ]);
 
-    // no mutual swipe
-    if (aSwiped && bSwiped) {
-      const match = await MatchService.createMatch(userAId, userBId);
-
-      this.realtime.emitToUser(userAId, 'match', match);
-      this.realtime.emitToUser(userBId, 'match', match);
+    // No mutual match yet
+    if (!aSwiped || !bSwiped) {
+      return null;
     }
-    // create match
+
+    // Create match
     const match = await prisma.match.create({
       data: {
         userOneId,
         userTwoId,
       },
     });
-    // 🔥 REAL-TIME EVENT
-    this.realtime.emitToUser(userOneId, 'match', {
-      matchId: match.id,
-      userId: userTwoId,
-    });
 
-    this.realtime.emitToUser(userTwoId, 'match', {
-      matchId: match.id,
-      userId: userOneId,
-    });
-    // 🔥 AUTO CREATE CONVERSATION
-    const conversation = await prisma.conversation.create({
+    // Auto create conversation
+    await prisma.conversation.create({
       data: {
         matchId: match.id,
       },
     });
 
-    // 🔥 REAL-TIME EVENTS
+    // Real-time match event
     this.realtime.emitToUser(userAId, 'match', {
       matchId: match.id,
       matchedUserId: userBId,

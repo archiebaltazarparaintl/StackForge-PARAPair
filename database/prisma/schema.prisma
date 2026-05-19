@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -9,77 +10,119 @@ datasource db {
 
 model User {
   id              String           @id @default(uuid())
+
+  // AUTH
   email           String           @unique
   username        String           @unique
   passwordHash    String
-  currentMode     AccountType      @default(PERSONAL)
+
+  // REGISTRATION
+  firstName       String
+  lastName        String
+  birthDate       DateTime
+
+  // VERIFICATION
   isVerified      Boolean          @default(false)
+  otpCode         String?
+  otpExpiresAt    DateTime?
+
+  // ACCOUNT STATE
+  currentMode     AccountType      @default(PERSONAL)
   isActive        Boolean          @default(true)
   isBanned        Boolean          @default(false)
+
+  // TRACKING
   lastLoginAt     DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
+
+  // RELATIONS
   businessProfile BusinessProfile?
+  personalProfile PersonalProfile?
+
   userOneMatches  Match[]          @relation("UserOneMatches")
   userTwoMatches  Match[]          @relation("UserTwoMatches")
+
   sentMessages    Message[]
-  personalProfile PersonalProfile?
+
   refreshTokens   RefreshToken[]
+
   reportsReceived Report[]         @relation("ReportedUser")
   reportsMade     Report[]         @relation("Reporter")
+
   receivedSwipes  Swipe[]          @relation("ReceiverSwipes")
   sentSwipes      Swipe[]          @relation("SenderSwipes")
+
+  notifications   Notification[]
+  settings        UserSettings?
 
   @@index([email])
   @@index([username])
   @@index([currentMode])
   @@index([currentMode, isActive])
-  @@index([isActive, currentMode])
 }
 
 model PersonalProfile {
   id              String    @id @default(uuid())
   userId          String    @unique
-  firstName       String
-  lastName        String
-  birthDate       DateTime?
+
   gender          String?
   bio             String?
   location        String?
+
   skills          String[]
   interests       String[]
+
   education       String?
   experience      String?
+
   portfolioUrl    String?
   linkedinUrl     String?
   githubUrl       String?
+
   profileImageUrl String?
-  resumeUrl       String?
+
+  // REQUIRED CV
+  resumeUrl       String
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([location])
 }
 
 model BusinessProfile {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  businessName  String
-  industry      String
-  description   String?
-  websiteUrl    String?
-  businessEmail String?
-  phoneNumber   String?
-  location      String?
-  teamSize      Int?
-  services      String[]
-  lookingFor    String[]
-  logoUrl       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  userId           String   @unique
+
+  businessName     String
+  industry         String
+
+  description      String?
+
+  websiteUrl       String?
+  businessEmail    String?
+  phoneNumber      String?
+
+  location         String?
+
+  teamSize         Int?
+
+  services         String[]
+  lookingFor       String[]
+
+  logoUrl          String?
+
+  // REQUIRED
+  businessCardUrl  String
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([industry])
   @@index([location])
@@ -172,22 +215,32 @@ model RefreshToken {
 
 model Notification {
   id        String   @id @default(uuid())
+
   userId    String
+
   type      String
   payload   Json
+
   isRead    Boolean  @default(false)
+
   createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
 }
 
 model UserSettings {
-  id        String  @id @default(uuid())
-  userId    String  @unique
-  darkMode  Boolean @default(false)
-  pushNotif Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  userId      String   @unique
+
+  darkMode    Boolean  @default(false)
+  pushNotif   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum AccountType {
