@@ -71,7 +71,7 @@ export class MatchService {
       userId: userOneId,
     });
     // 🔥 AUTO CREATE CONVERSATION
-    await prisma.conversation.create({
+    const conversation = await prisma.conversation.create({
       data: {
         matchId: match.id,
       },
