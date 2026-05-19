@@ -209,7 +209,7 @@ importers:
     dependencies:
       '@prisma/client':
         specifier: ^6.7.0
-        version: 6.7.0(prisma@6.7.0(typescript@6.0.3))(typescript@6.0.3)
+        version: 6.7.0(prisma@6.7.0(typescript@5.9.3))(typescript@5.9.3)
     devDependencies:
       eslint:
         specifier: ^10.4.0
@@ -219,7 +219,7 @@ importers:
         version: 3.8.3
       prisma:
         specifier: ^6.7.0
-        version: 6.7.0(typescript@6.0.3)
+        version: 6.7.0(typescript@5.9.3)
       tsx:
         specifier: ^4.22.1
         version: 4.22.1
@@ -227,8 +227,8 @@ importers:
         specifier: ^2.9.14
         version: 2.9.14
       typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
+        specifier: ^5.9.3
+        version: 5.9.3
 
   apps/api:
     dependencies:
@@ -359,9 +359,6 @@ importers:
       tsconfig-paths:
         specifier: ^4.2.0
         version: 4.2.0
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
       typescript-eslint:
         specifier: ^8.20.0
         version: 8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
@@ -4801,11 +4798,6 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@6.0.3:
-    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   uglify-js@3.19.3:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
@@ -6114,11 +6106,6 @@ snapshots:
     optionalDependencies:
       prisma: 6.7.0(typescript@5.9.3)
       typescript: 5.9.3
-
-  '@prisma/client@6.7.0(prisma@6.7.0(typescript@6.0.3))(typescript@6.0.3)':
-    optionalDependencies:
-      prisma: 6.7.0(typescript@6.0.3)
-      typescript: 6.0.3
 
   '@prisma/config@6.7.0':
     dependencies:
@@ -9199,16 +9186,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  prisma@6.7.0(typescript@6.0.3):
-    dependencies:
-      '@prisma/config': 6.7.0
-      '@prisma/engines': 6.7.0
-    optionalDependencies:
-      fsevents: 2.3.3
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-
   prop-types@15.8.1:
     dependencies:
       loose-envify: 1.4.0
@@ -9939,8 +9916,6 @@ snapshots:
       - supports-color
 
   typescript@5.9.3: {}
-
-  typescript@6.0.3: {}
 
   uglify-js@3.19.3:
     optional: true
