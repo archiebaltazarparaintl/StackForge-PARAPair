@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PrismaClient } from "@prisma/client";
+import { AccountType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -55,7 +56,7 @@ export class DiscoveryService {
         if (user.personalProfile) score += 10;
       }
 
-      if (currentUser.currentMode === 'BUSINESS') {
+      if (currentUser.currentMode === AccountType.BUSINESS) {
         if (user.personalProfile) score += 30;
         if (user.businessProfile) score += 10;
       }
