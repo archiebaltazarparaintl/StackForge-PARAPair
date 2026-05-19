@@ -9,7 +9,8 @@
     "db:generate": "prisma generate --schema=./database/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=./database/prisma/schema.prisma",
     "db:studio": "prisma studio --schema=./database/prisma/schema.prisma",
-    "db:push": "prisma db push --schema=./database/prisma/schema.prisma"
+    "db:push": "prisma db push --schema=./database/prisma/schema.prisma",
+    "db:discovery-test": "tsx database/tests/discovery-test.ts"
   },
   "keywords": [],
   "author": "",
