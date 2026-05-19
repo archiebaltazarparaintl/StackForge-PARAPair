@@ -1,26 +1,16 @@
 {
-  "name": "StackForge-PARAPair",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "stackforge-parapair",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.1.2",
-      "onFail": "download"
-    }
-  },
-  "type": "module",
   "devDependencies": {
-    "eslint": "^10.4.0",
-    "prettier": "^3.8.3",
-    "turbo": "^2.9.14",
-    "typescript": "^6.0.3"
+    "turbo": "^2.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
   }
 }
