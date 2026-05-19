@@ -9,7 +9,7 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 const prisma = new PrismaClient();
 
 export class MatchService {
-  constructor(private realtime: RealtimeGateway) {}
+  constructor(private realtime?: RealtimeGateway) {}
 
   async checkAndCreateMatch(userAId: string, userBId: string) {
     // Normalize IDs to avoid duplicate match combinations
@@ -69,12 +69,12 @@ export class MatchService {
     });
 
     // Real-time match event
-    this.realtime.emitToUser(userAId, 'match', {
+    this.realtime?.emitToUser(userAId, 'match', {
       matchId: match.id,
       matchedUserId: userBId,
     });
 
-    this.realtime.emitToUser(userBId, 'match', {
+    this.realtime?.emitToUser(userBId, 'match', {
       matchId: match.id,
       matchedUserId: userAId,
     });
