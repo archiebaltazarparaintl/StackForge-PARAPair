@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import { MatchService } from "../../apps/api/src/modules/match/match.service";
 
 const prisma = new PrismaClient();
+const matchService = new MatchService();
 
 async function runTest() {
   console.log("\n🧪 STACKFORGE DB TEST STARTED\n");
@@ -25,7 +27,6 @@ async function runTest() {
 
     console.log("✅ Users created");
 
-    // 2. Swipe A -> B (RIGHT)
     await prisma.swipe.create({
   data: {
     senderId: userA.id,
@@ -42,15 +43,11 @@ await prisma.swipe.create({
   },
 });
 
-    // 4. Check match
-    const match = await prisma.match.findFirst({
-      where: {
-        OR: [
-          { userOneId: userA.id, userTwoId: userB.id },
-          { userOneId: userB.id, userTwoId: userA.id },
-        ],
-      },
-    });
+// 🔥 THIS IS THE MISSING PIECE
+const match = await matchService.checkAndCreateMatch(
+  userA.id,
+  userB.id
+);
 
     if (!match) {
       throw new Error("❌ MATCH NOT CREATED — swipe logic broken");
