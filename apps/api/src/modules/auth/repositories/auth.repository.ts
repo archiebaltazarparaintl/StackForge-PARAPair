@@ -28,4 +28,45 @@ export class AuthRepository {
       data,
     });
   }
+  async createOtp(data: { email: string; otpHash: string; expiresAt: Date }) {
+    return prisma.oTPVerification.create({
+      data,
+    });
+  }
+
+  async findOtpByEmail(email: string) {
+    return prisma.oTPVerification.findFirst({
+      where: { email },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async markOtpVerified(email: string) {
+    return prisma.oTPVerification.updateMany({
+      where: { email },
+      data: {
+        verified: true,
+      },
+    });
+  }
+
+  async findVerifiedOtp(email: string) {
+    return prisma.oTPVerification.findFirst({
+      where: {
+        email,
+        verified: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async deleteOtpByEmail(email: string) {
+    return prisma.oTPVerification.deleteMany({
+      where: { email },
+    });
+  }
 }

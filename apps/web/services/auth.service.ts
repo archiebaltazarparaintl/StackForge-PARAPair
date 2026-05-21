@@ -38,3 +38,15 @@ export const registerUser = async (
 
   return response.data;
 };
+
+export const verifyOtp = async (
+  data: {
+    email: string;
+    otpCode: string;
+  },
+) => {
+  return axios.post(
+    `${API_URL}/auth/verify-otp`,
+    data,
+  );
+};
