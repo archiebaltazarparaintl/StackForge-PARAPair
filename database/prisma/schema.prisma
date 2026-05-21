@@ -631,6 +631,56 @@ model OtpVerification {
   @@index([email])
 }
 
+model Listing {
+  id String @id @default(uuid())
+
+  businessId String
+
+  title String
+  description String
+
+  category String
+
+  price Decimal?
+
+  location String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business BusinessProfile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  applications ListingApplication[]
+
+  @@index([businessId])
+  @@index([category])
+}
+
+model ListingApplication {
+  id String @id @default(uuid())
+
+  listingId String
+  applicantId String
+
+  status ApplicationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  applicant User @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, applicantId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 ///////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////
