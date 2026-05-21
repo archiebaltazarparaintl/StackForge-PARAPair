@@ -1,10 +1,7 @@
-"use client";
-
 import Link from 'next/link';
-
 export default function LandingPage() {
-  return (
-    <div className="min-h-screen bg-[#0D1B2A] flex flex-col items-center justify-center text-white p-6">
+    return (
+     <div className="min-h-screen bg-[#0D1B2A] flex flex-col items-center justify-center text-white p-6">
       <div className="text-[#FF7A00] font-bold text-5xl tracking-tighter mb-4 italic">
         PA<span className="text-[#0EA5A5]">RA</span>PAIR
       </div>
