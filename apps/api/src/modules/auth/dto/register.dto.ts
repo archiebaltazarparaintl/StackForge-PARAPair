@@ -23,6 +23,9 @@ export class RegisterDto {
   birthDate!: string;
 
   @IsString()
+  otpCode!: string;
+
+  @IsString()
   @MinLength(8)
   @Matches(/[A-Z]/, {
     message: 'Password must contain uppercase letter',
