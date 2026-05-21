@@ -1,10 +1,10 @@
 'use client';
 
-import DashboardSidebar from './components/sidebar/DashboardSidebar';
+import DashboardSidebar from '../packages/ui/sidebar/DashboardSidebar';
 
-import DashboardNavbar from './components/navbar/DashboardNavbar';
+import DashboardNavbar from '../packages/ui/navbar/DashboardNavbar';
 
-import MobileBottomNav from './components/mobile/MobileBottomNav';
+import MobileBottomNav from '../packages/ui/mobile/MobileBottomNav';
 
 export default function DashboardLayout({
   children,

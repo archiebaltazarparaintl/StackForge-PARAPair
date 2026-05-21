@@ -10,7 +10,7 @@ import {
 
 import { useEffect, useState } from 'react';
 
-import StatsCard from '../components/cards/StatsCard';
+import StatsCard from '../../packages/ui/cards/StatsCard';
 
 import { getPersonalStats } from '../services/dashboard.service';
 
