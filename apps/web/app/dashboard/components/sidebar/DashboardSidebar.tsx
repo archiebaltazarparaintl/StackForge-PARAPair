@@ -1,18 +1,32 @@
 'use client';
 
-import { MessageCircle, Bell, User, Briefcase, Shield, Settings, LayoutDashboard } from "lucide-react";
-import Link from "next/dist/client/link";
-import { usePathname } from "next/navigation";
+import Link from 'next/link';
 
-const items = [
+import {
+  LayoutDashboard,
+  Bell,
+  User,
+  MessageCircle,
+  Settings,
+  Sparkles,
+} from 'lucide-react';
+
+import { usePathname } from 'next/navigation';
+
+const links = [
   {
     label: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    label: 'Messages',
-    href: '/dashboard/personal/inbox',
+    label: 'Discover',
+    href: '/dashboard/discover',
+    icon: Sparkles,
+  },
+  {
+    label: 'Inbox',
+    href: '/dashboard/inbox',
     icon: MessageCircle,
   },
   {
@@ -22,18 +36,8 @@ const items = [
   },
   {
     label: 'Profile',
-    href: '/dashboard/personal/profile',
+    href: '/dashboard/profile',
     icon: User,
-  },
-  {
-    label: 'Business',
-    href: '/dashboard/business',
-    icon: Briefcase,
-  },
-  {
-    label: 'Admin',
-    href: '/dashboard/admin',
-    icon: Shield,
   },
   {
     label: 'Settings',
@@ -43,40 +47,45 @@ const items = [
 ];
 
 export default function DashboardSidebar() {
-  const pathname = usePathname();
+  const pathname =
+    usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[290px] border-r border-[#ECECEC] bg-white/90 backdrop-blur-xl p-6">
+    <aside className="hidden lg:flex w-[280px] border-r border-[#ECECEC] bg-white min-h-screen p-6 flex-col sticky top-0">
       <div className="mb-10">
-        <h1 className="text-3xl font-black tracking-tight text-[#171717]">
+        <h1 className="text-3xl font-black tracking-tight">
           PARA
           <span className="text-[#FF7A00]">
             PAIR
           </span>
         </h1>
+
+        <p className="text-sm text-slate-500 mt-2">
+          Professional Discovery
+        </p>
       </div>
 
       <nav className="space-y-2">
-        {items.map((item) => {
+        {links.map((item) => {
           const Icon = item.icon;
 
-          const active = pathname === item.href;
+          const active =
+            pathname ===
+            item.href;
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
+              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all font-semibold ${
                 active
-                  ? 'bg-[#FF7A00] text-white shadow-lg'
-                  : 'hover:bg-[#FFF1E4] text-[#5F6368]'
+                  ? 'bg-gradient-to-r from-[#FF7A00] to-[#FFB547] text-white shadow-lg'
+                  : 'hover:bg-[#FFF1E4] text-slate-700'
               }`}
             >
-              <Icon size={22} />
+              <Icon size={20} />
 
-              <span className="font-semibold">
-                {item.label}
-              </span>
+              {item.label}
             </Link>
           );
         })}

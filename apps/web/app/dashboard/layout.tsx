@@ -1,5 +1,10 @@
+'use client';
+
 import DashboardSidebar from './components/sidebar/DashboardSidebar';
+
 import DashboardNavbar from './components/navbar/DashboardNavbar';
+
+import MobileBottomNav from './components/mobile/MobileBottomNav';
 
 export default function DashboardLayout({
   children,
@@ -7,16 +12,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#FFFDFC] flex">
-      <DashboardSidebar />
+    <div className="min-h-screen bg-[#FFFDFC]">
+      <div className="flex">
+        {/* DESKTOP SIDEBAR */}
+        <DashboardSidebar />
 
-      <main className="flex-1 flex flex-col">
-        <DashboardNavbar />
+        {/* CONTENT */}
+        <main className="flex-1 min-h-screen flex flex-col">
+          <DashboardNavbar />
 
-        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
-          {children}
-        </div>
-      </main>
+          <div className="flex-1 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8">
+            <div className="max-w-[1600px] mx-auto">
+              {children}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* MOBILE NAV */}
+      <MobileBottomNav />
     </div>
   );
 }
