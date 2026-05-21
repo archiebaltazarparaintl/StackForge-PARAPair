@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import React, {
@@ -21,7 +22,7 @@ import {
 
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
-import { getProfiles } from '@/app/utils/storage';
+// import { getProfiles } from '@/app/utils/storage';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -43,25 +44,24 @@ export default function SelectTypePage() {
     setProfileCount,
   ] = useState(0);
 
-  useEffect(() => {
-    setProfileCount(
-      getProfiles().length,
-    );
-  }, []);
+//   useEffect(() => {
+//     setProfileCount(
+//       getProfiles().length,
+//     );
+//   }, []);
 
-  const handleContinue = () => {
+    const handleContinue = () => {
     if (!type) return;
 
-    if (type === 'personal') {
-      router.push(
-        '/build-personal',
-      );
-    } else {
-      router.push(
-        '/build-business',
-      );
-    }
-  };
+    localStorage.setItem(
+        'selected-role',
+        type,
+    );
+
+    router.push(
+        '/select-interests',
+    );
+    };
 
   return (
     <div
