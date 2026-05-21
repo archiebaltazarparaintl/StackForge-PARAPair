@@ -9,7 +9,10 @@ export interface RegisterPayload {
 }
 
 export async function registerUser(payload: RegisterPayload) {
-  const response = await api.post('/auth/register', payload);
+  const response = await api.post(
+    '/auth/register',
+    payload,
+  );
 
   return response.data;
 }

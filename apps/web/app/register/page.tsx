@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import { registerUser } from '@/services/auth.service';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { Exo_2 } from 'next/font/google';
@@ -70,21 +71,17 @@ export default function RegisterPage() {
       setError('');
       setSuccess('');
 
-      // Example API call
-      // await registerUser({
-      //   fullname,
-      //   username,
-      //   email,
-      //   password,
-      //   birthDate,
-      // });
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
 
-      console.log({
+      await registerUser({
         fullname,
         username,
-        birthDate,
         email,
         password,
+        birthDate,
       });
 
       setSuccess('Account created successfully');
