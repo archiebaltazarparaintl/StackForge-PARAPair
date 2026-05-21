@@ -7,7 +7,7 @@ import {
 } from '../../services/auth.service';
 
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 import { Exo_2 } from 'next/font/google';
 
@@ -48,6 +48,12 @@ export default function RegisterPage() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // PASSWORD STRENGTH
   const strengthResult = useMemo(() => {
@@ -417,9 +423,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      disabled={
-                        !email || loading
-                      }
+                      disabled={mounted ? !email || loading : true}
                       className={`px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
                         !email || loading
                           ? 'bg-gray-300 cursor-not-allowed text-white'
@@ -504,7 +508,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* PASSWORD STRENGTH */}
-                  {password.length > 0 && (
+                  {mounted && password.length > 0 && (
                     <div className="mt-2 px-1">
 
                       <div className="flex gap-1 h-1.5">
@@ -534,7 +538,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* CONFIRM PASSWORD */}
-                {password.length >= 8 && (
+                {mounted && password.length >= 8 && (
                   <div className="space-y-1">
 
                     <label className="text-[10px] font-black uppercase tracking-widest ml-1 text-slate-500">
