@@ -1,14 +1,8 @@
 'use client';
 
+import { MessageCircle, Bell, User, Briefcase, Shield, Settings, LayoutDashboard } from "lucide-react";
 import Link from "next/dist/client/link";
-
-  MessageCircle,
-  Bell,
-  User,
-  Briefcase,
-  Shield,
-  Settings,
-} from 'lucide-react';
+import { usePathname } from "next/navigation";
 
 const items = [
   {
