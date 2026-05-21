@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.apps/api/.env',
     }),
 
     AuthModule,

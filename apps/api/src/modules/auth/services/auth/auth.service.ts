@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import * as bcrypt from 'bcrypt';
 
 import { RegisterDto } from '../../dto/register.dto';
@@ -20,12 +15,17 @@ import {
 
 import { LoginDto } from '../../dto/login.dto';
 
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../../../prisma/prisma.service';
+
 @Injectable()
 export class AuthService {
   [x: string]: any;
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly mailService: MailService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
 
   // =========================================
@@ -156,7 +156,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials.');

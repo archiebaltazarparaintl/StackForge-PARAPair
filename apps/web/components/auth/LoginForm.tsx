@@ -239,6 +239,7 @@ export default function LoginForm() {
                   icon={
                     ShieldCheck
                   }
+                  
                 >
                   Sign In
                 </SubmitButton>
