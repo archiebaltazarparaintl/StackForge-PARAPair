@@ -131,6 +131,7 @@ export default function RegisterPage() {
         'Verification code sent to your email',
       );
     } catch (err: any) {
+      console.error('Error sending OTP:', err);
       setError(
         err?.response?.data?.message ||
           'Failed to send OTP',
