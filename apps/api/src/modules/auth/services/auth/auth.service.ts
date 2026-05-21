@@ -7,6 +7,7 @@ import { AuthRepository } from '../../repositories/auth.repository';
 
 @Injectable()
 export class AuthService {
+  [x: string]: any;
   constructor(private readonly authRepository: AuthRepository) {}
 
   async register(dto: RegisterDto) {
