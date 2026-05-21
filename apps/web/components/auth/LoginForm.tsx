@@ -364,6 +364,8 @@ export default function LoginForm() {
           response.access_token,
         );
 
+        document.cookie = `access_token=${response.access_token}; path=/`;
+
         router.push('/');
       } catch (err: any) {
         setError(
