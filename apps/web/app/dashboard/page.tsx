@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/session';
+import { getCurrentUser } from '../../lib/auth';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -8,16 +8,22 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  if (
-    user.role === 'ADMIN' ||
-    user.role === 'SUPER_ADMIN'
-  ) {
-    redirect('/dashboard/admin');
+  const destination = getDashboardRoute(user);
+
+  redirect(destination);
+}
+
+function getDashboardRoute(user: {
+  role: string;
+  currentMode?: string;
+}) {
+  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    return '/dashboard/admin';
   }
 
   if (user.currentMode === 'BUSINESS') {
-    redirect('/dashboard/business');
+    return '/dashboard/business';
   }
 
-  redirect('/dashboard/personal');
+  return '/dashboard/personal';
 }
