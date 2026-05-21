@@ -299,12 +299,7 @@ model Report {
 
   reporter          User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
-  reviewedBy        User? @relation(
-    "ReportReviewer",
-    fields: [reviewedById],
-    references: [id],
-    onDelete: SetNull
-  )
+  reviewedBy User? @relation("ReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status])
 }
@@ -529,11 +524,7 @@ model DeviceSession {
 
   refreshTokenId    String? @unique
 
-  refreshToken      RefreshToken? @relation(
-    fields: [refreshTokenId],
-    references: [id],
-    onDelete: SetNull
-  )
+  refreshToken RefreshToken? @relation(fields: [refreshTokenId], references: [id], onDelete: SetNull)
 
   deviceName        String?
   deviceType        String?
