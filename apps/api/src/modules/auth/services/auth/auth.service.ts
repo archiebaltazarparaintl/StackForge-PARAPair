@@ -7,9 +7,14 @@ import { VerifyOtpDto } from '../../dto/verify-otp.dto';
 
 import { AuthRepository } from '../../repositories/auth.repository';
 
+import { MailService } from '../../../../common/mail/mail.service';
+
 @Injectable()
 export class AuthService {
-  constructor(private readonly authRepository: AuthRepository) {}
+  constructor(
+    private readonly authRepository: AuthRepository,
+    private readonly mailService: MailService,
+  ) {}
 
   // =========================================
   // GENERATE OTP
@@ -22,26 +27,23 @@ export class AuthService {
   // SEND OTP
   // =========================================
   async sendOtp(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+
     const otp = this.generateOtp();
 
     const otpHash = await bcrypt.hash(otp, 10);
 
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 5); // 5 mins
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
 
-    // REMOVE OLD OTPs
-    await this.authRepository.deleteOtpByEmail(email);
+    await this.authRepository.deleteOtpByEmail(normalizedEmail);
 
-    // STORE NEW OTP
     await this.authRepository.createOtp({
-      email,
+      email: normalizedEmail,
       otpHash,
       expiresAt,
     });
 
-    // TODO:
-    // SEND EMAIL USING NODEMAILER
-
-    console.log('OTP:', otp);
+    await this.mailService.sendOtpEmail(normalizedEmail, otp);
 
     return {
       success: true,
