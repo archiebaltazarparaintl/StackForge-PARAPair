@@ -1,27 +1,121 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 import { RegisterDto } from '../../dto/register.dto';
+import { VerifyOtpDto } from '../../dto/verify-otp.dto';
+
 import { AuthRepository } from '../../repositories/auth.repository';
+
+import { MailService } from '../../../../common/mail/mail.service';
+
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { LoginDto } from '../../dto/login.dto';
+
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../../../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly authRepository: AuthRepository) {}
+  [x: string]: any;
+  constructor(
+    private readonly authRepository: AuthRepository,
+    private readonly mailService: MailService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  sendOtp(email: string) {
+  // =========================================
+  // GENERATE OTP
+  // =========================================
+  private generateOtp(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // =========================================
+  // SEND OTP
+  // =========================================
+  async sendOtp(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const otp = this.generateOtp();
+
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
+
+    await this.authRepository.deleteOtpByEmail(normalizedEmail);
+
+    await this.authRepository.createOtp({
+      email: normalizedEmail,
+      otpHash,
+      expiresAt,
+    });
+
+    await this.mailService.sendOtpEmail(normalizedEmail, otp);
+
     return {
       success: true,
-      message: `OTP sent successfully to ${email}`,
+      message: 'OTP sent successfully',
     };
   }
 
+  // =========================================
+  // VERIFY OTP
+  // =========================================
+  async verifyOtp(dto: VerifyOtpDto) {
+    const otpRecord = await this.authRepository.findOtpByEmail(dto.email);
+
+    if (!otpRecord) {
+      throw new BadRequestException('OTP not found');
+    }
+
+    // EXPIRED
+    if (new Date() > otpRecord.expiresAt) {
+      throw new BadRequestException('OTP expired');
+    }
+
+    const isMatch = await bcrypt.compare(dto.otpCode, otpRecord.otpHash);
+
+    if (!isMatch) {
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    await this.authRepository.markOtpVerified(dto.email);
+
+    return {
+      success: true,
+      message: 'OTP verified',
+    };
+  }
+
+  // =========================================
+  // REGISTER
+  // =========================================
   async register(dto: RegisterDto) {
+    // CHECK VERIFIED OTP
+    const verifiedOtp = await this.authRepository.findVerifiedOtp(dto.email);
+
+    if (!verifiedOtp) {
+      throw new BadRequestException('Email is not verified');
+    }
+
+    // CHECK OTP EXPIRATION
+    if (new Date() > verifiedOtp.expiresAt) {
+      throw new BadRequestException('OTP expired');
+    }
+
+    // EXISTING EMAIL
     const existingEmail = await this.authRepository.findByEmail(dto.email);
 
     if (existingEmail) {
       throw new BadRequestException('Email already exists');
     }
 
+    // EXISTING USERNAME
     const existingUsername = await this.authRepository.findByUsername(
       dto.username,
     );
@@ -30,8 +124,10 @@ export class AuthService {
       throw new BadRequestException('Username already exists');
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    // HASH PASSWORD
+    const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // CREATE USER
     const user = await this.authRepository.createUser({
       fullname: dto.fullname,
       username: dto.username,
@@ -40,10 +136,47 @@ export class AuthService {
       birthDate: new Date(dto.birthDate),
     });
 
+    // CLEANUP OTP
+    await this.authRepository.deleteOtpByEmail(dto.email);
+
     return {
       success: true,
       message: 'Account created successfully',
       userId: user.id,
+    };
+  }
+  async login(dto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        username: dto.username,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      email: user.email,
+    };
+
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+
+      user: {
+        id: user.id,
+        fullname: user.fullname,
+        username: user.username,
+        email: user.email,
+      },
     };
   }
 }
