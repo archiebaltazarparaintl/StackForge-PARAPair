@@ -1,4 +1,5 @@
 import axios from 'axios';
+import api from './api';
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -49,4 +50,20 @@ export const verifyOtp = async (
     `${API_URL}/auth/verify-otp`,
     data,
   );
+};
+
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+export const loginUser = async (
+  payload: LoginPayload,
+) => {
+  const response = await api.post(
+    '/auth/login',
+    payload,
+  );
+
+  return response.data;
 };

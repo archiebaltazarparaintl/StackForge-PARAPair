@@ -102,7 +102,7 @@ export default function OTPSection({
               )
             }
             placeholder="000000"
-            className="flex-1 h-12 rounded-2xl border border-[#0EA5A5]/30 bg-[#F0FDFA] text-center tracking-[0.45em] font-bold outline-none focus:border-[#0EA5A5]"
+            className="flex-1 h-12 rounded-2xl border border-[#0EA5A5]/30 bg-[#F0FDFA] text-center tracking-[0.20em] font-bold outline-none focus:border-[#0EA5A5]"
           />
 
           <button

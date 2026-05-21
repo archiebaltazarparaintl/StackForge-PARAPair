@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { BadRequestException, Injectable } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
 
@@ -12,8 +12,17 @@ import { AuthRepository } from '../../repositories/auth.repository';
 
 import { MailService } from '../../../../common/mail/mail.service';
 
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { LoginDto } from '../../dto/login.dto';
+
 @Injectable()
 export class AuthService {
+  [x: string]: any;
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly mailService: MailService,
@@ -134,6 +143,40 @@ export class AuthService {
       success: true,
       message: 'Account created successfully',
       userId: user.id,
+    };
+  }
+  async login(dto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        username: dto.username,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      email: user.email,
+    };
+
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+
+      user: {
+        id: user.id,
+        fullname: user.fullname,
+        username: user.username,
+        email: user.email,
+      },
     };
   }
 }
