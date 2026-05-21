@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './modules/auth/auth.module';
 
+import { PrismaModule } from './prisma/prisma.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -12,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
 
     AuthModule,
+    PrismaModule,
   ],
 })
 export class AppModule {}
