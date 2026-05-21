@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -31,30 +32,30 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-black tracking-tight text-[#171717]">
-          Admin Dashboard
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatsCard
-          title="Users"
-          value={stats.users}
-          icon={Users}
+            title="Users"
+            value={stats.users}
+            icon={Users}
         />
 
         <StatsCard
-          title="Businesses"
-          value={stats.businesses}
-          icon={Briefcase}
+            title="Businesses"
+            value={stats.businesses}
+            icon={Briefcase}
         />
 
         <StatsCard
-          title="Reports"
-          value={stats.reports}
-          icon={Flag}
+            title="Reports"
+            value={stats.reports}
+            icon={Flag}
         />
 
+        <StatsCard
+            title="Activity"
+            value={stats.activity}
+            icon={Activity}
+        />
+        </div>
+  );
 }

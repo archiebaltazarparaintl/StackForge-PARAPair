@@ -1,7 +1,4 @@
-import {
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 
 import { Server } from 'socket.io';
 
@@ -12,14 +9,9 @@ import { Server } from 'socket.io';
 })
 export class SocketGateway {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
-  notifyUser(
-    userId: string,
-    payload: any,
-  ) {
-    this.server
-      .to(userId)
-      .emit('notification', payload);
+  notifyUser(userId: string, payload: any) {
+    this.server.to(userId).emit('notification', payload);
   }
 }

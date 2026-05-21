@@ -1,16 +1,13 @@
-import {
-  Controller,
-  Get,
-  Req,
-} from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { Controller, Get, Req } from '@nestjs/common';
 
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
 export class DashboardController {
-  constructor(
-    private readonly dashboardService: DashboardService,
-  ) {}
+  constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('admin/stats')
   getAdminStats() {
@@ -18,20 +15,12 @@ export class DashboardController {
   }
 
   @Get('business/stats')
-  getBusinessStats(
-    @Req() req: any,
-  ) {
-    return this.dashboardService.getBusinessStats(
-      req.user.id,
-    );
+  getBusinessStats(@Req() req: any) {
+    return this.dashboardService.getBusinessStats(req.user.id);
   }
 
   @Get('personal/stats')
-  getPersonalStats(
-    @Req() req: any,
-  ) {
-    return this.dashboardService.getPersonalStats(
-      req.user.id,
-    );
+  getPersonalStats(@Req() req: any) {
+    return this.dashboardService.getPersonalStats(req.user.id);
   }
 }

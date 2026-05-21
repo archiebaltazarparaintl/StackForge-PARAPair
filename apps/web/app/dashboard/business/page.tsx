@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -58,4 +59,11 @@ export default function BusinessDashboardPage() {
         />
 
         <StatsCard
+          title="Revenue"
+          value={`₱${stats.revenue}`}
+          icon={DollarSign}
+        />
+      </div>
+    </div>
+  );
 }
