@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { sendOtp, verifyOtp, registerUser } from '@/services/auth.service';

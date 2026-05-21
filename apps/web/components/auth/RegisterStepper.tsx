@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { registerSchema } from '@/lib/validation';
-import { useRegister } from '@/hooks/useRegister';
+import { useRegister } from '../hooks/useRegister';
 
 import StepAccount from './steps/StepAccount';
 import StepVerify from './steps/StepVerify';

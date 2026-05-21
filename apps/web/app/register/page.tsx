@@ -20,7 +20,7 @@
 
 'use client';
 
-import RegisterStepper from '@/components/auth/RegisterStepper';
+import RegisterStepper from '../../components/auth/RegisterStepper';
 import { Toaster } from 'react-hot-toast';
 
 export default function RegisterPage() {

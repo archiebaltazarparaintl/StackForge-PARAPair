@@ -20,8 +20,6 @@ import {
 import {
   Sparkles,
   User,
-  Mail,
-  Lock,
   Calendar,
   AtSign,
 } from 'lucide-react';

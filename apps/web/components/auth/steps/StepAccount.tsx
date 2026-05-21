@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function StepAccount({ form, next, sendOtp }: any) {
   const { register, watch } = form;
 

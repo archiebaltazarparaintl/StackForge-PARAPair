@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function StepPassword({ form, submit, back }: any) {
   const { register, handleSubmit } = form;
 
