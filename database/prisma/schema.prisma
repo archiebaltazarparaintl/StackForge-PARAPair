@@ -89,8 +89,9 @@ model User {
   subscription Subscription?
 
   // TAG RELATIONS
-  skills    UserSkill[]
-  interests UserInterest[]
+  skills             UserSkill[]
+  interests          UserInterest[]
+  ListingApplication ListingApplication[]
 
   @@index([email])
   @@index([username])
@@ -121,7 +122,7 @@ model PersonalProfile {
   // REQUIRED CV
   resumeUrl String
 
-  skills String[]
+  skills    String[]
   interests String[]
 
   createdAt DateTime @default(now())
@@ -163,6 +164,7 @@ model BusinessProfile {
 
   // NORMALIZED SERVICES
   services BusinessService[]
+  Listing  Listing[]
 
   @@index([industry])
   @@index([location])
@@ -621,12 +623,12 @@ model Subscription {
 }
 
 model OtpVerification {
-  id          String   @id @default(uuid())
-  email       String
-  otpHash     String
-  verified    Boolean  @default(false)
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([email])
 }
@@ -636,7 +638,7 @@ model Listing {
 
   businessId String
 
-  title String
+  title       String
   description String
 
   category String
@@ -661,7 +663,7 @@ model Listing {
 model ListingApplication {
   id String @id @default(uuid())
 
-  listingId String
+  listingId   String
   applicantId String
 
   status ApplicationStatus @default(PENDING)
