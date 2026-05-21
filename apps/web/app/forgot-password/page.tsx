@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
 
             <div className="text-center mb-10">
               <h2 className="text-[44px] font-bold text-[#0D1B2A] tracking-tight">Forgot Password?</h2>
-              <p className="text-slate-400 mt-2 font-medium">We'll send a link to your email</p>
+              <p className="text-slate-400 mt-2 font-medium">We&rsquo;ll send a link to your email</p>
             </div>
 
             <div className="bg-white rounded-[32px] border border-[#E7EEF3] shadow-[0_10px_30px_rgba(15,23,42,0.04)] p-8 sm:p-10 text-[#0D1B2A]">

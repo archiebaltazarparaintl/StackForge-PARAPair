@@ -9,7 +9,6 @@ import {
   User,
   Mail,
   Lock,
-  ShieldCheck,
   Sparkles,
   Calendar,
   AtSign,
@@ -56,7 +55,7 @@ export default function RegisterPage() {
                 <span className="text-[#FF7A00]">PAIR</span>
               </h1>
               <p className="text-xl leading-relaxed text-white/90 font-medium tracking-tight italic">
-                "Building trusted professional connections through opportunity."
+                &rdquo;Building trusted professional connections through opportunity.&rdquo;
               </p>
             </div>
             <div className="flex gap-6 text-[11px] uppercase tracking-[0.3em] text-white/60 font-black">
