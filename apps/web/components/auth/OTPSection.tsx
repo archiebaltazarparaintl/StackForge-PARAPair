@@ -102,7 +102,7 @@ export default function OTPSection({
               )
             }
             placeholder="000000"
-            className="flex-1 h-12 rounded-2xl border border-[#0EA5A5]/30 bg-[#F0FDFA] text-center tracking-[0.27em] font-bold outline-none focus:border-[#0EA5A5]"
+            className="flex-1 h-12 rounded-2xl border border-[#0EA5A5]/30 bg-[#F0FDFA] text-center tracking-[0.45em] font-bold outline-none focus:border-[#0EA5A5]"
           />
 
           <button
@@ -113,7 +113,7 @@ export default function OTPSection({
               otpCode.length !== 6 ||
               verifyingOtp
             }
-            className="h-12 px-5 rounded-2xl bg-[#0EA5A5] text-white text-xs font-bold uppercase tracking-wider transition-all hover:bg-[#0b8b8b] disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="h-12 px-5 rounded-2xl bg-[#FF7A00] text-white text-xs font-bold uppercase tracking-wider transition-all hover:bg-[#e46d00] disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {verifyingOtp ? (
               <Loader2 className="w-4 h-4 animate-spin" />
