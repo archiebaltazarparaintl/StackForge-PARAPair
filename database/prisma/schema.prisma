@@ -9,88 +9,88 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // AUTH
-  email             String   @unique
-  username          String   @unique
-  passwordHash      String
+  email        String @unique
+  username     String @unique
+  passwordHash String
 
   // REGISTRATION
-  fullname          String
-  birthDate         DateTime
+  fullname  String
+  birthDate DateTime
 
   // VERIFICATION
-  isVerified        Boolean  @default(false)
-  otpHash           String?
-  otpExpiresAt      DateTime?
+  isVerified   Boolean   @default(false)
+  otpHash      String?
+  otpExpiresAt DateTime?
 
   // ACCOUNT STATE
-  currentMode       AccountType @default(PERSONAL)
-  isActive          Boolean @default(true)
-  isBanned          Boolean @default(false)
-  profileCompleted  Boolean @default(false)
+  currentMode      AccountType @default(PERSONAL)
+  isActive         Boolean     @default(true)
+  isBanned         Boolean     @default(false)
+  profileCompleted Boolean     @default(false)
 
-  role              UserRole @default(USER)
+  role UserRole @default(USER)
 
   // PRESENCE
-  isOnline          Boolean @default(false)
-  lastSeenAt        DateTime?
+  isOnline   Boolean   @default(false)
+  lastSeenAt DateTime?
 
   // TRACKING
-  lastLoginAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  deletedAt         DateTime?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   // PROFILES
-  businessProfile   BusinessProfile?
-  personalProfile   PersonalProfile?
+  businessProfile BusinessProfile?
+  personalProfile PersonalProfile?
 
   // MATCHING
-  userOneMatches    Match[] @relation("UserOneMatches")
-  userTwoMatches    Match[] @relation("UserTwoMatches")
+  userOneMatches Match[] @relation("UserOneMatches")
+  userTwoMatches Match[] @relation("UserTwoMatches")
 
   // MESSAGING
-  sentMessages      Message[]
+  sentMessages Message[]
 
   // TOKENS
-  refreshTokens     RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
 
   // REPORTS
-  reportsReceived   Report[] @relation("ReportedUser")
-  reportsMade       Report[] @relation("Reporter")
-  reviewedReports   Report[] @relation("ReportReviewer")
+  reportsReceived Report[] @relation("ReportedUser")
+  reportsMade     Report[] @relation("Reporter")
+  reviewedReports Report[] @relation("ReportReviewer")
 
   // SWIPES
-  receivedSwipes    Swipe[] @relation("ReceiverSwipes")
-  sentSwipes        Swipe[] @relation("SenderSwipes")
+  receivedSwipes Swipe[] @relation("ReceiverSwipes")
+  sentSwipes     Swipe[] @relation("SenderSwipes")
 
   // BLOCKS
-  blockedUsers      UserBlock[] @relation("Blocker")
-  blockedByUsers    UserBlock[] @relation("Blocked")
+  blockedUsers   UserBlock[] @relation("Blocker")
+  blockedByUsers UserBlock[] @relation("Blocked")
 
   // SETTINGS
-  notifications     Notification[]
-  settings          UserSettings?
+  notifications Notification[]
+  settings      UserSettings?
 
   // DEVICES
-  deviceSessions    DeviceSession[]
+  deviceSessions DeviceSession[]
 
   // MEDIA
-  media             Media[]
+  media Media[]
 
   // AUDIT
-  auditLogs         AuditLog[]
+  auditLogs AuditLog[]
 
   // SUBSCRIPTION
-  subscription      Subscription?
+  subscription Subscription?
 
   // TAG RELATIONS
-  skills            UserSkill[]
-  interests         UserInterest[]
+  skills    UserSkill[]
+  interests UserInterest[]
 
   @@index([email])
   @@index([username])
@@ -102,85 +102,84 @@ model User {
 }
 
 model PersonalProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
+  id     String @id @default(uuid())
+  userId String @unique
 
-  gender            String?
-  bio               String?
-  location          String?
+  gender   String?
+  bio      String?
+  location String?
 
-  education         String?
-  experience        String?
+  education  String?
+  experience String?
 
-  portfolioUrl      String?
-  linkedinUrl       String?
-  githubUrl         String?
+  portfolioUrl String?
+  linkedinUrl  String?
+  githubUrl    String?
 
-  profileImageUrl   String?
+  profileImageUrl String?
 
   // REQUIRED CV
-  resumeUrl         String
+  resumeUrl String
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([location])
 }
 
 model BusinessProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
+  id     String @id @default(uuid())
+  userId String @unique
 
-  businessName      String
-  industry          String
+  businessName String
+  industry     String
 
-  description       String?
+  description String?
 
-  websiteUrl        String?
-  businessEmail     String?
-  phoneNumber       String?
+  websiteUrl    String?
+  businessEmail String?
+  phoneNumber   String?
 
-  location          String?
+  location String?
 
-  teamSize          Int?
+  teamSize Int?
 
-  lookingFor        String[]
+  lookingFor String[]
 
-  logoUrl           String?
+  logoUrl String?
 
   // REQUIRED
-  businessCardUrl   String
+  businessCardUrl String
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // NORMALIZED SERVICES
-  services          BusinessService[]
+  services BusinessService[]
 
   @@index([industry])
   @@index([location])
 }
 
 model Swipe {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  senderId          String
-  receiverId        String
+  senderId   String
+  receiverId String
 
-  type              SwipeType
+  type SwipeType
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  receiver          User @relation("ReceiverSwipes", fields: [receiverId], references: [id], onDelete: Cascade)
-  sender            User @relation("SenderSwipes", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceiverSwipes", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User @relation("SenderSwipes", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
-
   @@index([senderId])
   @@index([receiverId])
   @@index([receiverId, type])
@@ -189,26 +188,25 @@ model Swipe {
 }
 
 model Match {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Always store smaller UUID in userOneId
   // and larger UUID in userTwoId
 
-  userOneId         String
-  userTwoId         String
+  userOneId String
+  userTwoId String
 
-  status            MatchStatus @default(ACTIVE)
+  status MatchStatus @default(ACTIVE)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  conversation      Conversation?
+  conversation Conversation?
 
-  userOne           User @relation("UserOneMatches", fields: [userOneId], references: [id], onDelete: Cascade)
-  userTwo           User @relation("UserTwoMatches", fields: [userTwoId], references: [id], onDelete: Cascade)
+  userOne User @relation("UserOneMatches", fields: [userOneId], references: [id], onDelete: Cascade)
+  userTwo User @relation("UserTwoMatches", fields: [userTwoId], references: [id], onDelete: Cascade)
 
   @@unique([userOneId, userTwoId])
-
   @@index([userOneId])
   @@index([userTwoId])
   @@index([status])
@@ -216,41 +214,41 @@ model Match {
 }
 
 model Conversation {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  matchId           String   @unique
+  matchId String @unique
 
-  lastMessageAt     DateTime?
+  lastMessageAt DateTime?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  match             Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  messages          Message[]
+  match    Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  messages Message[]
 
   @@index([lastMessageAt])
 }
 
 model Message {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  conversationId    String
-  senderId          String
+  conversationId String
+  senderId       String
 
-  type              MessageType @default(TEXT)
+  type MessageType @default(TEXT)
 
-  content           String?
+  content String?
 
-  seenAt            DateTime?
-  deletedAt         DateTime?
+  seenAt    DateTime?
+  deletedAt DateTime?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  attachments       MessageAttachment[]
+  attachments MessageAttachment[]
 
-  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender            User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([conversationId, createdAt])
@@ -261,43 +259,43 @@ model Message {
 }
 
 model MessageAttachment {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  messageId         String
+  messageId String
 
-  url               String
-  mimeType          String?
-  size              Int?
+  url      String
+  mimeType String?
+  size     Int?
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  message           Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
 }
 
 model Report {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  reporterId        String
-  reportedUserId    String
+  reporterId     String
+  reportedUserId String
 
-  reason            String
-  description       String?
+  reason      String
+  description String?
 
-  moderatorNotes    String?
+  moderatorNotes String?
 
-  reviewedAt        DateTime?
-  reviewedById      String?
+  reviewedAt   DateTime?
+  reviewedById String?
 
-  status            ReportStatus @default(PENDING)
+  status ReportStatus @default(PENDING)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  reportedUser      User @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reportedUser User @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
 
-  reporter          User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("ReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
@@ -305,77 +303,76 @@ model Report {
 }
 
 model RefreshToken {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  token             String   @unique
+  token String @unique
 
-  expiresAt         DateTime
-  revokedAt         DateTime?
+  expiresAt DateTime
+  revokedAt DateTime?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  deviceSession     DeviceSession?
+  deviceSession DeviceSession?
 
   @@index([userId])
   @@index([revokedAt])
 }
 
 model Notification {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  type              NotificationType
+  type NotificationType
 
-  title             String?
-  body              String?
+  title String?
+  body  String?
 
-  payload           Json
+  payload Json
 
-  isRead            Boolean @default(false)
+  isRead Boolean @default(false)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, isRead])
 }
 
 model UserSettings {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String   @unique
+  userId String @unique
 
-  darkMode          Boolean @default(false)
-  pushNotif         Boolean @default(true)
+  darkMode  Boolean @default(false)
+  pushNotif Boolean @default(true)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserBlock {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  blockerId         String
-  blockedId         String
+  blockerId String
+  blockedId String
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  blocker           User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
 
-  blocked           User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
 
   @@unique([blockerId, blockedId])
-
   @@index([blockerId])
   @@index([blockedId])
 }
@@ -385,87 +382,84 @@ model UserBlock {
 ///////////////////////////////////////////////////////
 
 model Skill {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name              String   @unique
-  slug              String   @unique
+  name String @unique
+  slug String @unique
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  users             UserSkill[]
+  users UserSkill[]
 }
 
 model Interest {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name              String   @unique
-  slug              String   @unique
+  name String @unique
+  slug String @unique
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  users             UserInterest[]
+  users UserInterest[]
 }
 
 model Service {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name              String   @unique
-  slug              String   @unique
+  name String @unique
+  slug String @unique
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  businesses        BusinessService[]
+  businesses BusinessService[]
 }
 
 model UserSkill {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
-  skillId           String
+  userId  String
+  skillId String
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skill             Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([userId, skillId])
-
   @@index([userId])
   @@index([skillId])
 }
 
 model UserInterest {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
-  interestId        String
+  userId     String
+  interestId String
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  interest          Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
 
   @@unique([userId, interestId])
-
   @@index([userId])
   @@index([interestId])
 }
 
 model BusinessService {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  businessId        String
-  serviceId         String
+  businessId String
+  serviceId  String
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  business          BusinessProfile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business BusinessProfile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  service           Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, serviceId])
-
   @@index([businessId])
   @@index([serviceId])
 }
@@ -475,18 +469,18 @@ model BusinessService {
 ///////////////////////////////////////////////////////
 
 model PasswordResetToken {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  tokenHash         String   @unique
+  tokenHash String @unique
 
-  expiresAt         DateTime
-  usedAt            DateTime?
+  expiresAt DateTime
+  usedAt    DateTime?
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -497,18 +491,18 @@ model PasswordResetToken {
 ///////////////////////////////////////////////////////
 
 model EmailVerificationToken {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  tokenHash         String   @unique
+  tokenHash String @unique
 
-  expiresAt         DateTime
-  verifiedAt        DateTime?
+  expiresAt  DateTime
+  verifiedAt DateTime?
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -518,28 +512,28 @@ model EmailVerificationToken {
 ///////////////////////////////////////////////////////
 
 model DeviceSession {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  refreshTokenId    String? @unique
+  refreshTokenId String? @unique
 
   refreshToken RefreshToken? @relation(fields: [refreshTokenId], references: [id], onDelete: SetNull)
 
-  deviceName        String?
-  deviceType        String?
+  deviceName String?
+  deviceType String?
 
-  ipAddress         String?
-  userAgent         String?
+  ipAddress String?
+  userAgent String?
 
-  lastActiveAt      DateTime @default(now())
+  lastActiveAt DateTime @default(now())
 
-  expiresAt         DateTime
+  expiresAt DateTime
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -550,23 +544,23 @@ model DeviceSession {
 ///////////////////////////////////////////////////////
 
 model Media {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String
+  userId String
 
-  type              MediaType
+  type MediaType
 
-  url               String
+  url String
 
-  mimeType          String?
-  size              Int?
+  mimeType String?
+  size     Int?
 
-  isPrimary         Boolean @default(false)
+  isPrimary Boolean @default(false)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -576,22 +570,22 @@ model Media {
 ///////////////////////////////////////////////////////
 
 model AuditLog {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  actorUserId       String?
+  actorUserId String?
 
-  action            String
+  action String
 
-  entityType        String
-  entityId          String
+  entityType String
+  entityId   String
 
-  metadata          Json?
+  metadata Json?
 
-  ipAddress         String?
+  ipAddress String?
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  actorUser         User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorUser User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([actorUserId])
   @@index([entityType, entityId])
@@ -603,22 +597,22 @@ model AuditLog {
 ///////////////////////////////////////////////////////
 
 model Subscription {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId            String   @unique
+  userId String @unique
 
-  provider          SubscriptionProvider
+  provider SubscriptionProvider
 
-  externalId        String?
+  externalId String?
 
-  status            SubscriptionStatus
+  status SubscriptionStatus
 
-  currentPeriodEnd  DateTime?
+  currentPeriodEnd DateTime?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])
 }
