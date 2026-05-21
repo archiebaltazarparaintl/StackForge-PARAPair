@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { PrismaClient } from "@prisma/client";
-import { AccountType } from "@prisma/client";
+import { PrismaClient } from "../../../../../database/generated/client'";
+import { AccountType } from "../../../../../database/generated/client'";
 
 const prisma = new PrismaClient();
 

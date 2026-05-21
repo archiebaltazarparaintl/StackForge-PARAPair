@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../../../../database/generated/client'";
 import { MatchService } from "../../apps/api/src/modules/match/match.service";
 
 const prisma = new PrismaClient();
