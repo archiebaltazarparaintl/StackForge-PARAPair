@@ -41,7 +41,11 @@ export class DiscoveryService {
       },
       include: {
         personalProfile: true,
-        businessProfile: true,
+        businessProfile: {
+          include: {
+            services: true,
+          },
+        },
       },
       take: 100, // prefetch pool
     });
