@@ -11,6 +11,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../../common/mail/mail.service';
 
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtModule } from '@nestjs/jwt';
         expiresIn: '7d',
       },
     }),
+    PrismaModule,
   ],
 
   controllers: [AuthController],
