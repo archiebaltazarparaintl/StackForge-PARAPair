@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../../../../database/generated/client';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 const prisma = new PrismaClient();

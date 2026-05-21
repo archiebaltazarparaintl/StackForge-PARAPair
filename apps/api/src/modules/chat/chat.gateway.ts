@@ -11,7 +11,7 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../../../../database/generated/client';
 
 const prisma = new PrismaClient();
 
