@@ -17,8 +17,8 @@ model User {
   passwordHash String
 
   // REGISTRATION
-  fullname  String  @default(" ")
-  birthDate DateTime  @default(now())
+  fullname  String   @default(" ")
+  birthDate DateTime @default(now())
 
   // VERIFICATION
   isVerified   Boolean   @default(false)
