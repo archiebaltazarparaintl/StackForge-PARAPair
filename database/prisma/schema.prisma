@@ -620,6 +620,17 @@ model Subscription {
   @@index([status])
 }
 
+model OtpVerification {
+  id          String   @id @default(uuid())
+  email       String
+  otpHash     String
+  verified    Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+}
+
 ///////////////////////////////////////////////////////
 // ENUMS
 ///////////////////////////////////////////////////////
