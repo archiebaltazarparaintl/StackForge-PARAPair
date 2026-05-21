@@ -26,11 +26,11 @@ import {
   AtSign,
 } from 'lucide-react';
 
-import InputField from './InputField';
+import InputField from './ui/InputField';
 import PasswordField from './PasswordField';
 import PasswordStrength from './PasswordStrength';
-import OTPSection from './OTPSection';
-import SubmitButton from './SubmitButton';
+import OTPSection from './ui/OTPSection';
+import SubmitButton from './ui/SubmitButton';
 import AlertMessage from './AlertMessage';
 
 const EMAIL_REGEX =
