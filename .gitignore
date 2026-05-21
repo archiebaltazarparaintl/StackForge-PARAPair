@@ -33,3 +33,26 @@ uploads
 coverage
 
 dist
+
+# Dependencies
+node_modules
+
+# Builds
+.next
+dist
+coverage
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Prisma
+generated
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
