@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-
 import * as bcrypt from 'bcrypt';
 
 import { RegisterDto } from '../../dto/register.dto';
@@ -7,8 +6,14 @@ import { AuthRepository } from '../../repositories/auth.repository';
 
 @Injectable()
 export class AuthService {
-  [x: string]: any;
   constructor(private readonly authRepository: AuthRepository) {}
+
+  sendOtp(email: string) {
+    return {
+      success: true,
+      message: `OTP sent successfully to ${email}`,
+    };
+  }
 
   async register(dto: RegisterDto) {
     const existingEmail = await this.authRepository.findByEmail(dto.email);
