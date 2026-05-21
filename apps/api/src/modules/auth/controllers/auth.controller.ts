@@ -2,6 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 
 import { RegisterDto } from '../dto/register.dto';
 import { AuthService } from '../services/auth/auth.service';
+import { VerifyOtpDto } from '../dto/verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
