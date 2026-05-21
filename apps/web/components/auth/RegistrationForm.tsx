@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -19,8 +20,6 @@ import {
 import {
   Sparkles,
   User,
-  Mail,
-  Lock,
   Calendar,
   AtSign,
 } from 'lucide-react';
