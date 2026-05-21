@@ -388,7 +388,7 @@ export default function RegisterForm() {
                 Create Account
               </h2>
 
-              <p className="mt-2 text-sm sm:text-base text-slate-500 italic">
+              <p className="mt-2 text-sm sm:text-base text-slate-500">
                 Join the PARAPair Network
               </p>
             </div>
