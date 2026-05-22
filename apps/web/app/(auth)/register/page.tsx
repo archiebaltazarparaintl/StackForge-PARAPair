@@ -1,7 +1,7 @@
 'use client';
 
 import { Exo_2 } from 'next/font/google';
-import RegisterForm from '../../components/auth/RegistrationForm';
+import RegisterForm from '../../../../web/src/features/auth/components/RegistrationForm';
 
 const exo2 = Exo_2({
   subsets: ['latin'],

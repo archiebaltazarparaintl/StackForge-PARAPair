@@ -5,9 +5,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { NextRequest, NextResponse } from 'next/server';
 
-// import { Prisma } from '../../../../../../database/generated/client';
-import { prisma } from '../../../../..';
 import { getUserFromCookie } from '../../../../../web/features/lib/auth';
+import { Prisma } from '../../../../../../database/generated/client';
 
 export async function POST(req: NextRequest) {
   try {
