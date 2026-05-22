@@ -1,31 +1,27 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import jwt from "jsonwebtoken";
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function proxy(req: NextRequest) {
+  const token = req.cookies.get("token")?.value;
 
-  const token = request.cookies.get('access_token')?.value;
+  const isAuthPage = req.nextUrl.pathname.startsWith("/login");
+  const isDashboard = req.nextUrl.pathname.startsWith("/dashboard");
 
-  const isAuthPage = pathname === '/login' || pathname === '/register';
-  const isDashboard = pathname.startsWith('/dashboard');
-
-  // ❌ No token → block dashboard only
-  if (isDashboard && !token) {
-    return NextResponse.redirect(
-      new URL('/login', request.url),
-    );
+  // No token → block dashboard
+  if (!token && isDashboard) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // ❌ Token exists → block auth pages only (avoid unnecessary redirect loops)
-  if (isAuthPage && token) {
-    return NextResponse.redirect(
-      new URL('/dashboard', request.url),
-    );
+  // Has token → block login page
+  if (token && isAuthPage) {
+    try {
+      jwt.verify(token, process.env.JWT_SECRET!);
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    } catch {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
   }
 
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register'],
-};

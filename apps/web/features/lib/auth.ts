@@ -1,8 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export const getUserRole = (user: any) => {
-  return user?.role ?? 'USER';
-};
+import "server-only";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-export const isAdmin = (user: any) => {
-  return ['ADMIN', 'SUPER_ADMIN'].includes(user?.role);
-};
+export function getUserFromCookie() {
+  const token = cookies().get("token")?.value;
+
+  if (!token) return null;
+
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET!);
+  } catch {
+    return null;
+  }
+}
