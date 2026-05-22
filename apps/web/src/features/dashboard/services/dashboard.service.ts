@@ -1,4 +1,4 @@
-import api from '@/services/api';
+import api from '@/features/services/api';
 
 export const getAdminStats = async () => {
   const response = await api.get(

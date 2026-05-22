@@ -302,7 +302,7 @@ import { motion } from 'framer-motion';
 
 import { loginUser } from '@/features/services/auth.service';
 
-import { tokenStorage } from '@/features/lib/storage';
+import { tokenStorage } from '@/lib/storage';
 
 import InputField from './InputField';
 import PasswordField from './PasswordField';

@@ -590,7 +590,7 @@ import {
   registerUser,
   sendOtp,
   verifyOtp,
-} from '@/services/auth.service';
+} from '@/features/services/auth.service';
 
 import {
   Sparkles,
