@@ -1,15 +1,21 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 // app/api/user/interests/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { JwtPayload } from 'jsonwebtoken';
 
 import { getUserFromCookie } from '../../../../../web/features/lib/auth';
 import { PrismaClient } from '../../../../../../database/generated/client';
 
 const prisma = new PrismaClient();
+
+interface AuthUser extends JwtPayload {
+  id: string;
+  email?: string;
+}
 
 function slugify(value: string) {
   return value
@@ -22,7 +28,7 @@ function slugify(value: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUserFromCookie();
+    const user = (await getUserFromCookie()) as AuthUser | null;
 
     if (!user?.id) {
       return NextResponse.json(
@@ -34,6 +40,8 @@ export async function POST(req: NextRequest) {
         },
       );
     }
+
+    const userId = user.id;
 
     const body: unknown = await req.json();
 
@@ -87,7 +95,7 @@ export async function POST(req: NextRequest) {
       // REMOVE EXISTING RELATIONS
       await tx.userInterest.deleteMany({
         where: {
-          userId: user.id,
+          userId,
         },
       });
 
@@ -109,7 +117,7 @@ export async function POST(req: NextRequest) {
 
         await tx.userInterest.create({
           data: {
-            userId: user.id,
+            userId,
             interestId: interest.id,
           },
         });
@@ -118,7 +126,7 @@ export async function POST(req: NextRequest) {
       // MARK PROFILE COMPLETE
       await tx.user.update({
         where: {
-          id: user.id,
+          id: userId,
         },
 
         data: {
