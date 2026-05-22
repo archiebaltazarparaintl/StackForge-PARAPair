@@ -32,8 +32,6 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ['400', '500', '600', '700', '800'],
 });
 
-const [isNavigating, setIsNavigating] = useState(false);
-
 const interests = [
   { name: 'Engineering', icon: Cpu },
   { name: 'Coding', icon: Code2 },
