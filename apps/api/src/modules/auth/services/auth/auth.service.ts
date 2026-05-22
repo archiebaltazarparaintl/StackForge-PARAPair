@@ -7,6 +7,7 @@ import { LoginDto } from '../../dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  [x: string]: any;
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
