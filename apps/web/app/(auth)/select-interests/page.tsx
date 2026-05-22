@@ -74,25 +74,49 @@ export default function SelectInterestsPage() {
 
 const handleContinue = async () => {
   if (isNavigating) return;
+
   if (selected.length < 3) return;
 
   setIsNavigating(true);
 
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('user-interests', JSON.stringify(selected));
-  }
-
   try {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/interests`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ interests: selected }),
-    });
-  } catch (err) {
-    console.log('Failed to save interests, continuing anyway');
-  }
+    // SAVE LOCAL
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        'user-interests',
+        JSON.stringify(selected),
+      );
+    }
 
-  router.push('/dashboard/personal/swipe');
+    // SAVE TO DATABASE
+    const response = await fetch(
+      '/api/profile/interests',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          interests: selected,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed saving interests');
+    }
+
+    // GO TO PUBLIC SWIPE
+    router.push('/dashboard/personal/swipe');
+  } catch (error) {
+    console.log(error);
+
+    alert('Failed to continue');
+  } finally {
+    setIsNavigating(false);
+  }
 };
 
   return (
