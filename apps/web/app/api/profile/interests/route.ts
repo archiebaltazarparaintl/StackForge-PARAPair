@@ -1,24 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function POST(req: NextRequest) {
+// SAVE interests
+export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log('INTERESTS:', body);
+    const { userId, interests } = body;
 
-    return NextResponse.json({
-      success: true,
+    if (!userId || !interests) {
+      return NextResponse.json(
+        { error: "Missing fields" },
+        { status: 400 }
+      );
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        interests,
+      },
     });
-  } catch (error) {
-    console.error(error);
 
+    return NextResponse.json(updatedUser);
+  } catch (error) {
     return NextResponse.json(
-      {
-        success: false,
-      },
-      {
-        status: 500,
-      },
+      { error: "Server error saving interests" },
+      { status: 500 }
     );
   }
 }
