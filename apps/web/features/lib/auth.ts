@@ -2,8 +2,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-export function getUserFromCookie() {
-  const token = cookies().get("token")?.value;
+export async function getUserFromCookie() {
+  const token = (await cookies()).get("token")?.value;
 
   if (!token) return null;
 

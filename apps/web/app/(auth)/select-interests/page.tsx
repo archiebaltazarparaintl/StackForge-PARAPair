@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/no-unused-vars */
  'use client';
 
-import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { motion } from 'framer-motion';
@@ -72,24 +72,27 @@ export default function SelectInterestsPage() {
     });
   };
 
-const handleContinue = () => {
+const handleContinue = async () => {
   if (isNavigating) return;
-
   if (selected.length < 3) return;
 
   setIsNavigating(true);
 
   if (typeof window !== 'undefined') {
-    localStorage.setItem(
-      'user-interests',
-      JSON.stringify(selected),
-    );
+    localStorage.setItem('user-interests', JSON.stringify(selected));
   }
 
-  // small delay prevents App Router history flood
-  setTimeout(() => {
-    router.push('');
-  }, 50);
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/interests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interests: selected }),
+    });
+  } catch (err) {
+    console.log('Failed to save interests, continuing anyway');
+  }
+
+  router.push('/dashboard/personal/swipe');
 };
 
   return (
