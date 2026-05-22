@@ -109,7 +109,7 @@ const handleContinue = async () => {
     }
 
     // GO TO PUBLIC SWIPE
-    router.push('/swipe');
+    router.push('/discover')
   } catch (error) {
     console.log(error);
 
