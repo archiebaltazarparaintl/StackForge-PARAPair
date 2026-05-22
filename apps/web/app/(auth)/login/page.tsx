@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const check = async () => {
-      const user = await getUserFromCookies();
+      const user = getUserFromCookies();
 
       if (user) {
         router.push('/dashboard');
