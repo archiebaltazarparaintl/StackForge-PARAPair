@@ -2,14 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getMe } from '../../../src/lib/auth';
+import { getUserFromCookies } from '../../../src/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
     const check = async () => {
-      const user = await getMe();
+      const user = await getUserFromCookies();
 
       if (user) {
         router.push('/dashboard');
