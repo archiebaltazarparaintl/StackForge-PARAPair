@@ -300,14 +300,14 @@ import {
 
 import { motion } from 'framer-motion';
 
-import { loginUser } from '@/features/services/auth.service';
+import { loginUser } from '@/features/auth/services/auth.service';
 
-import { tokenStorage } from '@/features/lib/storage';
+import { tokenStorage } from '@/lib/storage';
 
-import InputField from './InputField';
-import PasswordField from './PasswordField';
-import SubmitButton from './SubmitButton';
-import AlertMessage from './AlertMessage';
+import InputField from '../../../web/src/features/auth/components/InputField';
+import PasswordField from '../../../web/src/features/auth/components/PasswordField';
+import SubmitButton from '../../../web/src/features/auth/components/SubmitButton';
+import AlertMessage from '../../../web/src/features/auth/components/AlertMessage';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
