@@ -12,13 +12,12 @@ import {
   Req,
 } from '@nestjs/common';
 
-import type { Request } from 'express';
-
-import { JwtAuthGuard } from '';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { AuthService } from '../services/auth/auth.service';
+import { CurrentUser } from '../decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -47,7 +46,12 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(@Req() req: Request) {
-    return req.user;
+  getMe(@CurrentUser() user: any) {
+    return user;
+  }
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@CurrentUser() user: any) {
+    return user;
   }
 }

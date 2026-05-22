@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/rules-of-hooks */
  'use client';
 
-import { useMemo, useState } from 'react';
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { motion } from 'framer-motion';
@@ -51,16 +52,7 @@ const interests = [
 export default function SelectInterestsPage() {
   const router = useRouter();
 
-  // ✅ hydration-safe init (prevents SSR/localStorage mismatch)
-  const [selected, setSelected] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('user-interests');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const [search, setSearch] = useState('');
 
@@ -73,7 +65,7 @@ export default function SelectInterestsPage() {
   const toggleInterest = (value: string) => {
     setSelected((prev) => {
       if (prev.includes(value)) {
-        return prev.filter((item) => item !== value);
+        return prev.filter((item: string) => item !== value);
       }
       return [...prev, value];
     });
@@ -232,7 +224,7 @@ const handleContinue = () => {
 
               {/* SELECTED */}
               <div className="mt-8 flex flex-wrap gap-2">
-                {selected.map((item) => (
+                {selected.map((item: boolean | Key | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined) => (
                   <div
                     key={item}
                     className="px-4 py-2 rounded-full bg-[#FFF1E4] border border-[#FFD5A6] text-[#FF7A00] text-sm font-semibold"
@@ -262,4 +254,8 @@ const handleContinue = () => {
       </div>
     </div>
   );
+}
+
+function setSelected(arg0: (prev: any) => any) {
+  throw new Error('Function not implemented.');
 }
