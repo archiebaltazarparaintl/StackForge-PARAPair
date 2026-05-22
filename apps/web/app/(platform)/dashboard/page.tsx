@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../../src/lib/auth';
+import { isAdmin } from '../../../features/lib/auth';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
   if (!user) {
-    // redirect('/login');
+    console.log('No user found, redirecting to /register. user:', user);
+    redirect('/register');
   }
 
   const destination = getDashboardRoute(user);
@@ -17,7 +19,7 @@ function getDashboardRoute(user: {
   role: string;
   currentMode?: string;
 }) {
-  if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+  if (isAdmin(user)) {
     return '/dashboard/admin';
   }
 

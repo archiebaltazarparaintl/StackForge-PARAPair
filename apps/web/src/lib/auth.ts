@@ -1,8 +1,7 @@
+import 'server-only';
+
 import { cookies } from 'next/headers';
-
 import jwt from 'jsonwebtoken';
-
-import API from './api';
 
 interface JwtPayload {
   sub: string;
@@ -12,45 +11,31 @@ interface JwtPayload {
   currentMode: string;
 }
 
-export async function getCurrentUser() {
+export function getUserFromCookies() {
+  const token = cookies().get('token')?.value;
+  if (!token) return null;
+
+  return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+}
+
+export function getCurrentUser() {
   try {
-    const cookieStore =
-      await cookies();
+    const token = cookies().get('access_token')?.value;
 
-    const token =
-      cookieStore.get(
-        'access_token',
-      )?.value;
-
-    if (!token) {
-      return null;
-    }
+    if (!token) return null;
 
     const decoded = jwt.verify(
       token,
-      process.env
-        .NEXT_PUBLIC_JWT_SECRET ||
-        'secret',
+      process.env.JWT_SECRET!
     ) as JwtPayload;
 
     return {
       id: decoded.sub,
       email: decoded.email,
-      username:
-        decoded.username,
+      username: decoded.username,
       role: decoded.role,
-      currentMode:
-        decoded.currentMode,
+      currentMode: decoded.currentMode,
     };
-  } catch {
-    return null;
-  }
-}
-
-export async function getMe() {
-  try {
-    const res = await API.get('/auth/me');
-    return res.data;
   } catch {
     return null;
   }
