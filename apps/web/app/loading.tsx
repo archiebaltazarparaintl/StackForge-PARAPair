@@ -12,7 +12,7 @@ export default function Loading() {
 
         <div className="space-y-2 text-center">
           <h2 className="text-xl font-semibold text-[#171717]">
-            Loading PARA Pair
+            Loading PARAPair
           </h2>
 
           <p className="text-sm text-[#8E8E93]">
