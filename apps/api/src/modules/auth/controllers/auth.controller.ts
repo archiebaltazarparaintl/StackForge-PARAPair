@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -9,7 +10,6 @@ import {
   HttpStatus,
   Post,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
