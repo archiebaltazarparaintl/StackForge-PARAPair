@@ -300,7 +300,7 @@ import {
 
 import { motion } from 'framer-motion';
 
-import { loginUser } from '@/features/services/auth.service';
+import { loginUser } from '../../../features/auth/services/auth.service';
 
 import { tokenStorage } from '@/lib/storage';
 

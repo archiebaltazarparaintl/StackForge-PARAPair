@@ -1,47 +1,25 @@
 import { NextResponse } from 'next/server';
-
 import type { NextRequest } from 'next/server';
 
-export function proxy(
-  request: NextRequest,
-) {
-  const token =
-    request.cookies.get(
-      'access_token',
-    )?.value;
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  const isAuthPage =
-    request.nextUrl.pathname ===
-      '/login' ||
-    request.nextUrl.pathname ===
-      '/register';
+  const token = request.cookies.get('access_token')?.value;
 
-  const isDashboard =
-    request.nextUrl.pathname.startsWith(
-      '/dashboard',
-    );
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isDashboard = pathname.startsWith('/dashboard');
 
-  if (
-    isDashboard &&
-    !token
-  ) {
+  // ❌ No token → block dashboard only
+  if (isDashboard && !token) {
     return NextResponse.redirect(
-      new URL(
-        '/login',
-        request.url,
-      ),
+      new URL('/login', request.url),
     );
   }
 
-  if (
-    isAuthPage &&
-    token
-  ) {
+  // ❌ Token exists → block auth pages only (avoid unnecessary redirect loops)
+  if (isAuthPage && token) {
     return NextResponse.redirect(
-      new URL(
-        '/dashboard',
-        request.url,
-      ),
+      new URL('/dashboard', request.url),
     );
   }
 
@@ -49,9 +27,5 @@ export function proxy(
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/login',
-    '/register',
-  ],
+  matcher: ['/dashboard/:path*', '/login', '/register'],
 };
