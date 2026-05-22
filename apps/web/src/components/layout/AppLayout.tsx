@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { BottomNav } from '@/components/navigation/BottonNav';
+import { BottomNav } from '../../components/navigation/BottomNav';
 
 interface Props {
     children: ReactNode;

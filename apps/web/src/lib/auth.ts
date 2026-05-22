@@ -2,6 +2,8 @@ import { cookies } from 'next/headers';
 
 import jwt from 'jsonwebtoken';
 
+import API from './api';
+
 interface JwtPayload {
   sub: string;
   email: string;
@@ -40,6 +42,15 @@ export async function getCurrentUser() {
       currentMode:
         decoded.currentMode,
     };
+  } catch {
+    return null;
+  }
+}
+
+export async function getMe() {
+  try {
+    const res = await API.get('/auth/me');
+    return res.data;
   } catch {
     return null;
   }
