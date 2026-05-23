@@ -21,7 +21,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "rootDir": "./src",
+    "rootDir": "../..",
     // "ignoreDeprecations": "6.0"
   }
 }
