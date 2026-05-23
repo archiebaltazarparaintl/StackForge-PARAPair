@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const { userId, interests } = body;
 
-    if (!userId || !interests) {
+    if (!userId || !Array.isArray(interests)) {
       return NextResponse.json(
         { error: "Missing fields" },
         { status: 400 }
