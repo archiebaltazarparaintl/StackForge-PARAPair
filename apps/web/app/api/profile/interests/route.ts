@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../../../api/src/prisma/prisma.service";
 
 // SAVE interests
 export async function POST(req: Request) {
