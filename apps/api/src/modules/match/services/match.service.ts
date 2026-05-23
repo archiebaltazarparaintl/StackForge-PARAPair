@@ -8,8 +8,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@
-import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { RealtimeGateway } from '../../realtime/realtime.gateway';
 
 @Injectable()
 export class MatchService {
