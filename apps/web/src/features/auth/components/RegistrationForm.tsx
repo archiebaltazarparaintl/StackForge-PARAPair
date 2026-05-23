@@ -959,11 +959,12 @@ export default function RegisterForm() {
 
           {/* LEFT PANEL */}
           <motion.div
-            initial={{
+            initial={false}
+            animate={{
               opacity: 0,
               x: -40,
             }}
-            animate={{
+            whileInView={{
               opacity: 1,
               x: 0,
             }}
@@ -1058,11 +1059,12 @@ export default function RegisterForm() {
 
           {/* RIGHT PANEL */}
           <motion.div
-            initial={{
+            initial={false}
+            animate={{
               opacity: 0,
               y: 40,
             }}
-            animate={{
+            whileInView={{
               opacity: 1,
               y: 0,
             }}

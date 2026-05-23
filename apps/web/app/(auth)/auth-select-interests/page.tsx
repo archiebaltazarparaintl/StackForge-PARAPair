@@ -72,52 +72,29 @@ export default function SelectInterestsPage() {
     });
   };
 
-const handleContinue = async () => {
-  if (isNavigating) return;
+const guestId = localStorage.getItem('guest-id');
 
-  if (selected.length < 3) return;
+const guestInterests = localStorage.getItem(
+  'guest-interests',
+);
 
-  setIsNavigating(true);
+if (guestId && guestInterests) {
+  await fetch('/api/profile/attach-guest-interests', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: user.id,
+      guestId,
+      interests: JSON.parse(guestInterests),
+    }),
+  });
 
-  try {
-    // SAVE LOCAL
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        'user-interests',
-        JSON.stringify(selected),
-      );
-    }
-
-    // SAVE TO DATABASE
-    const response = await fetch(
-      '/api/profile/interests',
-      {
-        method: 'POST',
-
-        headers: {
-          'Content-Type': 'application/json',
-        },
-
-        body: JSON.stringify({
-          interests: selected,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed saving interests');
-    }
-
-    // GO TO PUBLIC SWIPE
-    router.push('/swipe')
-  } catch (error) {
-    console.log(error);
-
-    alert('Failed to continue');
-  } finally {
-    setIsNavigating(false);
-  }
-};
+  // CLEAR TEMP DATA
+  localStorage.removeItem('guest-id');
+  localStorage.removeItem('guest-interests');
+}
 
   return (
     <div

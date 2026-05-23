@@ -7,7 +7,7 @@ import { AuthService } from './services/auth/auth.service';
 import { AuthRepository } from './repositories/auth.repository';
 
 import { MailService } from '../../common/mail/mail.service';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
   imports: [

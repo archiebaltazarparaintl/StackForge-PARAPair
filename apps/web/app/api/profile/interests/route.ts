@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../api/src/prisma/prisma.service";
+import { PrismaClient } from '../../../../../../database/generated/client';
+
+const prisma = new PrismaClient();
 
 // SAVE interests
 export async function POST(req: Request) {
@@ -8,7 +11,7 @@ export async function POST(req: Request) {
 
     const { userId, interests } = body;
 
-    if (!userId || !interests) {
+    if (!userId || !Array.isArray(interests)) {
       return NextResponse.json(
         { error: "Missing fields" },
         { status: 400 }

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Body,
@@ -25,6 +22,9 @@ export class AuthController {
 
   @Post('send-otp')
   sendOtp(@Body() body: { email: string }) {
+    console.log('THIS =>', this);
+    console.log('AUTH SERVICE =>', this.authService);
+
     return this.authService.sendOtp(body.email);
   }
 
