@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { JwtPayload } from 'jsonwebtoken';
 
-import { getUserFromCookie } from '../../../../../web/features/lib/auth';
+import { getUserFromCookie } from '../../../../../web/src/features/lib/auth';
 import { PrismaClient } from '../../../../../../database/generated/client';
 
 const prisma = new PrismaClient();

@@ -304,10 +304,10 @@ import { loginUser } from '@/features/auth/services/auth.service';
 
 import { tokenStorage } from '@/lib/storage';
 
-import InputField from '../../../web/src/features/auth/components/InputField';
-import PasswordField from '../../../web/src/features/auth/components/PasswordField';
-import SubmitButton from '../../../web/src/features/auth/components/SubmitButton';
-import AlertMessage from '../../../web/src/features/auth/components/AlertMessage';
+import InputField from '../../src/features/auth/components/InputField';
+import PasswordField from '../../src/features/auth/components/PasswordField';
+import SubmitButton from '../../src/features/auth/components/SubmitButton';
+import AlertMessage from '../../src/features/auth/components/AlertMessage';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],

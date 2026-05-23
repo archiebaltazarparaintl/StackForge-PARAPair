@@ -1,6 +1,6 @@
 'use client';
 
-import SwipeDeck from '../../../web/components/swipe/SwipeDeck';
+import SwipeDeck from '../../src/components/swipe/SwipeDeck';
 
 export default function DiscoverPage() {
   return (
