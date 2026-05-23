@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { JwtPayload } from 'jsonwebtoken';
 
-import { verifyAccessToken } from '@repo/;
+import { verifyAccessToken } from '@repo/shared/auth';
 import { PrismaClient } from '../../../../../../packages/db/generated/client';
 
 const prisma = new PrismaClient();

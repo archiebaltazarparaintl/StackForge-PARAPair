@@ -262,9 +262,9 @@ importers:
       '@prisma/client':
         specifier: ^6.7.0
         version: 6.7.0(prisma@6.7.0(typescript@5.9.3))(typescript@5.9.3)
-      '@repo/shared':
+      '@repo/db':
         specifier: workspace:*
-        version: link:../../packages/shared
+        version: link:../../packages/db
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
