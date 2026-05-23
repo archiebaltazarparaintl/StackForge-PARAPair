@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+   "workspaces": [
+    "apps/*",
+    "packages/*",
+    "database/*",
+    "api/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
      "db:test": "tsx database/tests/db-health-check.ts",
