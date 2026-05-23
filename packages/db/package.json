@@ -5,27 +5,14 @@
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
-"exports": {
-  ".": {
-    "types": "./src/index.ts",
-    "default": "./src/index.ts"
-  },
-  "./auth": {
-    "types": "./src/auth.ts",
-    "default": "./src/auth.ts"
-  }
-},
   "scripts": {
-    "generate": "prisma generate",
-    "migrate": "prisma migrate deploy"
+    "generate": "prisma generate --schema=./prisma/schema.prisma",
+    "migrate": "prisma migrate deploy --schema=./prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "6.7.0",
-    "jsonwebtoken": "^9.0.3"
+    "@prisma/client": "6.7.0"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.9.1",
     "prisma": "6.7.0"
   }
 }
