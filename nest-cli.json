@@ -7,5 +7,13 @@
     "webpack": false,
     "tsConfigPath": "apps/api/tsconfig.json",
     "deleteOutDir": true
+  },
+  "projects": {
+    "api": {
+      "type": "application",
+      "root": "apps/api",
+      "entryFile": "main",
+      "sourceRoot": "apps/api/src"
+    }
   }
 }
