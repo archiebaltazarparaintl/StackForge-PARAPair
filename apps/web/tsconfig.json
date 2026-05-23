@@ -54,7 +54,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "../../packages/shared/src/auth.ts"  ],
   "exclude": [
     "node_modules"
   ]
