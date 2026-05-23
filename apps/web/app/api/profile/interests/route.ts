@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../api/src/prisma/prisma.service";
+import { PrismaClient } from '../../../../../../database/generated/client';
+
+const prisma = new PrismaClient();
 
 // SAVE interests
 export async function POST(req: Request) {
