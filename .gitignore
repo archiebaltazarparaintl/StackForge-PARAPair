@@ -60,4 +60,4 @@ Thumbs.db
 dist
 .next
 node_modules
-coverage
+coveragepackages/db/generated
