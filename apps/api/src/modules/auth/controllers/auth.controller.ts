@@ -1,12 +1,23 @@
 /* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
-import { AuthService } from '../services/auth/auth.service';
 import { VerifyOtpDto } from '../dto/verify-otp.dto';
+import { AuthService } from '../services/auth/auth.service';
+import { CurrentUser } from '../decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -26,9 +37,21 @@ export class AuthController {
   verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto);
   }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  getMe(@CurrentUser() user: any) {
+    return user;
+  }
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@CurrentUser() user: any) {
+    return user;
   }
 }

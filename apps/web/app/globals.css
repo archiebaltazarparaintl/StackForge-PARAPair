@@ -9,3 +9,26 @@ body {
   margin: 0;
   padding: 0;
 }
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #fffdfc;
+  color: #171717;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(255, 122, 0, 0.18);
+}
+
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}

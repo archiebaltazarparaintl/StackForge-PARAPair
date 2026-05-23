@@ -56,3 +56,8 @@ generated
 # OS
 .DS_Store
 Thumbs.db
+
+dist
+.next
+node_modules
+coverage
