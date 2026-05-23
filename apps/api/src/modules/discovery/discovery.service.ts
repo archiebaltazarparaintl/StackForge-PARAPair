@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { PrismaClient } from '@repo/shared';
-import { AccountType } from '../../../../../database/generated/client';
+import { PrismaClient } from '../../../../../packages/db/generated/client';
+import { AccountType } from '../../../../../packages/db/generated/client';
 
 const prisma = new PrismaClient();
 
