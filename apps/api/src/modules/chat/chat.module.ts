@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ChatGateway } from './chat.gateway';
+import { ChatGateway } from '../realtime/realtime.gateway';
 
 @Module({
   providers: [ChatGateway],
