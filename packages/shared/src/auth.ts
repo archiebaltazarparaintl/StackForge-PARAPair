@@ -1,5 +1,7 @@
 import "server-only";
-import jwt, { JwtPayload } from 'jsonwebtoken';
+
+import { cookies } from "next/headers";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 export async function getUserFromCookie() {
   const token = (await cookies()).get("token")?.value;
@@ -12,7 +14,6 @@ export async function getUserFromCookie() {
     return null;
   }
 }
-
 export interface AuthUserPayload extends JwtPayload {
   id: string;
   email: string;
