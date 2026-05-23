@@ -5,11 +5,14 @@
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
-  "exports": {
+"exports": {
   ".": {
     "types": "./src/index.ts",
-    "default": "./src/index.ts",
-    "/auth": "./src/auth.ts"
+    "default": "./src/index.ts"
+  },
+  "./auth": {
+    "types": "./src/auth.ts",
+    "default": "./src/auth.ts"
   }
 },
   "scripts": {
