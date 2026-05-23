@@ -5,6 +5,12 @@
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
+  "exports": {
+  ".": {
+    "types": "./src/index.ts",
+    "default": "./src/index.ts"
+  }
+},
   "scripts": {
     "generate": "prisma generate",
     "migrate": "prisma migrate deploy"
