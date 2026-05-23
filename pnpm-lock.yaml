@@ -508,15 +508,7 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/db:
-    dependencies:
-      '@prisma/client':
-        specifier: 6.7.0
-        version: 6.7.0(prisma@6.7.0(typescript@5.9.3))(typescript@5.9.3)
-    devDependencies:
-      prisma:
-        specifier: 6.7.0
-        version: 6.7.0(typescript@5.9.3)
+  packages/db: {}
 
 packages:
 
