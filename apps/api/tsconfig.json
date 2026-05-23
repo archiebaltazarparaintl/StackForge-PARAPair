@@ -37,5 +37,9 @@
 
   "include": ["src/**/*"],
 
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "paths": {
+    "@repo/db": ["packages/db/src/index.ts"],
+    "@repo/db/*": ["packages/db/src/*"]
+  }
 }
