@@ -5,5 +5,8 @@
   "types": "./src/index.ts",
   "exports": {
     "./auth": "./src/auth.ts"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3"
   }
 }
