@@ -1,7 +1,7 @@
 'use client';
 
 import { Exo_2 } from 'next/font/google';
-import LoginForm from '../../../components/auth/LoginForm';
+import LoginForm from '../../../src/components/auth/LoginForm'
 
 const exo2 = Exo_2({
   subsets: ['latin'],
