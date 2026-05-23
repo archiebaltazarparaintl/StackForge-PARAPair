@@ -1,6 +1,9 @@
 {
   "name": "@repo/shared",
   "version": "1.0.0",
-  "main": "src/index.ts",
-  "types": "src/index.ts"
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    "./auth": "./src/auth.ts"
+  }
 }
