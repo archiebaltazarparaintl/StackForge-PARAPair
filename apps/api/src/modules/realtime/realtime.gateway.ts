@@ -7,46 +7,106 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
+
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: {
+    origin: '*',
+  },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
   /**
-   * userId -> socketId
+   * userId -> socketIds
+   *
+   * Support multiple devices/tabs
    */
-  private userSockets = new Map<string, string>();
+  private userSockets = new Map<string, Set<string>>();
+
+  /**
+   * socketId -> userId
+   */
+  private socketUsers = new Map<string, string>();
+
+  // =========================================
+  // CONNECTION
+  // =========================================
 
   handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
+    console.log('✅ Client connected:', client.id);
   }
 
   handleDisconnect(client: Socket) {
-    console.log('Client disconnected:', client.id);
+    console.log('❌ Client disconnected:', client.id);
 
-    for (const [userId, socketId] of this.userSockets.entries()) {
-      if (socketId === client.id) {
+    const userId = this.socketUsers.get(client.id);
+
+    if (!userId) return;
+
+    const sockets = this.userSockets.get(userId);
+
+    if (sockets) {
+      sockets.delete(client.id);
+
+      // Remove user entirely if no sockets remain
+      if (sockets.size === 0) {
         this.userSockets.delete(userId);
-        break;
+
+        // Broadcast offline status
+        this.server.emit('user_offline', {
+          userId,
+        });
       }
     }
+
+    this.socketUsers.delete(client.id);
   }
 
+  // =========================================
+  // REGISTER USER
+  // =========================================
+
   /**
-   * Register user socket
    * Frontend:
-   * socket.emit('register', 'user-123');
+   *
+   * socket.emit('register', {
+   *   userId: 'user-123',
+   * });
    */
   @SubscribeMessage('register')
   handleRegister(
     @ConnectedSocket() client: Socket,
-    @MessageBody() userId: string,
+    @MessageBody()
+    payload: {
+      userId: string;
+    },
   ) {
-    this.userSockets.set(userId, client.id);
+    const { userId } = payload;
+
+    // Add socket to user
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+
+    this.userSockets.get(userId)?.add(client.id);
+
+    // Reverse mapping
+    this.socketUsers.set(client.id, userId);
+
+    // Join personal room
+    client.join(`user:${userId}`);
+
+    // Broadcast online status
+    this.server.emit('user_online', {
+      userId,
+    });
+
+    console.log(`🔥 Registered ${userId} -> ${client.id}`);
 
     return {
       success: true,
@@ -54,42 +114,92 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
   }
 
+  // =========================================
+  // JOIN CONVERSATION ROOM
+  // =========================================
+
   /**
-   * Send message
    * Frontend:
+   *
+   * socket.emit('join_conversation', {
+   *   conversationId: 'abc123',
+   * });
+   */
+  @SubscribeMessage('join_conversation')
+  handleJoinConversation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      conversationId: string;
+    },
+  ) {
+    const room = `conversation:${payload.conversationId}`;
+
+    client.join(room);
+
+    return {
+      success: true,
+      room,
+    };
+  }
+
+  // =========================================
+  // LEAVE CONVERSATION
+  // =========================================
+
+  @SubscribeMessage('leave_conversation')
+  handleLeaveConversation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      conversationId: string;
+    },
+  ) {
+    const room = `conversation:${payload.conversationId}`;
+
+    client.leave(room);
+
+    return {
+      success: true,
+    };
+  }
+
+  // =========================================
+  // SEND MESSAGE
+  // =========================================
+
+  /**
+   * Frontend:
+   *
    * socket.emit('send_message', {
+   *   conversationId: 'conv-1',
    *   senderId: '1',
    *   receiverId: '2',
    *   message: 'Hello',
    * });
    */
   @SubscribeMessage('send_message')
-  handleSendMessage(
+  async handleSendMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody()
     payload: {
+      conversationId: string;
       senderId: string;
       receiverId: string;
       message: string;
     },
   ) {
-    const { senderId, receiverId, message } = payload;
-
-    const receiverSocketId = this.userSockets.get(receiverId);
-
     const chatPayload = {
-      senderId,
-      receiverId,
-      message,
+      ...payload,
       timestamp: new Date(),
     };
 
-    // Emit to receiver
-    if (receiverSocketId) {
-      this.server.to(receiverSocketId).emit('receive_message', chatPayload);
-    }
+    // Emit to conversation room
+    this.server
+      .to(`conversation:${payload.conversationId}`)
+      .emit('receive_message', chatPayload);
 
-    // Emit back to sender
+    // ACK to sender
     client.emit('message_sent', chatPayload);
 
     return {
@@ -97,14 +207,67 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
   }
 
-  /**
-   * Utility method
-   */
+  // =========================================
+  // TYPING INDICATOR
+  // =========================================
+
+  @SubscribeMessage('typing')
+  handleTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      conversationId: string;
+      userId: string;
+    },
+  ) {
+    client
+      .to(`conversation:${payload.conversationId}`)
+      .emit('user_typing', payload);
+  }
+
+  @SubscribeMessage('stop_typing')
+  handleStopTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: {
+      conversationId: string;
+      userId: string;
+    },
+  ) {
+    client
+      .to(`conversation:${payload.conversationId}`)
+      .emit('user_stop_typing', payload);
+  }
+
+  // =========================================
+  // MATCH EVENT
+  // =========================================
+
+  emitMatch(userId: string, payload: any) {
+    this.server.to(`user:${userId}`).emit('match', payload);
+  }
+
+  // =========================================
+  // GENERIC USER EMITTER
+  // =========================================
+
   emitToUser(userId: string, event: string, payload: any) {
-    const socketId = this.userSockets.get(userId);
+    this.server.to(`user:${userId}`).emit(event, payload);
+  }
 
-    if (!socketId) return;
+  // =========================================
+  // ROOM EMITTER
+  // =========================================
 
-    this.server.to(socketId).emit(event, payload);
+  emitToConversation(conversationId: string, event: string, payload: any) {
+    this.server.to(`conversation:${conversationId}`).emit(event, payload);
+  }
+
+  // =========================================
+  // ONLINE CHECK
+  // =========================================
+
+  isUserOnline(userId: string) {
+    return this.userSockets.has(userId);
   }
 }

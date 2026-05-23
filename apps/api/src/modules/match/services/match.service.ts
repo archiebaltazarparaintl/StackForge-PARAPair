@@ -2,20 +2,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-import { PrismaClient } from '../../../../../database/generated/client';
-import { RealtimeGateway } from '../realtime/realtime.gateway';
-
-const prisma = new PrismaClient();
-
 export class MatchService {
-  constructor(private realtime?: RealtimeGateway) {}
+  constructor(private realtime: RealtimeGateway) {}
 
   async checkAndCreateMatch(userAId: string, userBId: string) {
-    // Normalize IDs to avoid duplicate match combinations
     const [userOneId, userTwoId] = [userAId, userBId].sort();
 
-    // Check existing match
     const existingMatch = await prisma.match.findUnique({
       where: {
         userOneId_userTwoId: {
@@ -29,7 +21,6 @@ export class MatchService {
       return existingMatch;
     }
 
-    // Check mutual RIGHT swipes
     const [aSwiped, bSwiped] = await Promise.all([
       prisma.swipe.findFirst({
         where: {
@@ -48,12 +39,10 @@ export class MatchService {
       }),
     ]);
 
-    // No mutual match yet
     if (!aSwiped || !bSwiped) {
       return null;
     }
 
-    // Create match
     const match = await prisma.match.create({
       data: {
         userOneId,
@@ -61,25 +50,23 @@ export class MatchService {
       },
     });
 
-    // Auto create conversation
-    await prisma.conversation.create({
+    const conversation = await prisma.conversation.create({
       data: {
         matchId: match.id,
       },
     });
 
-    // Real-time match event
-    this.realtime?.emitToUser(userAId, 'match', {
+    this.realtime.emitMatch(userAId, {
       matchId: match.id,
+      conversationId: conversation.id,
       matchedUserId: userBId,
     });
 
-    this.realtime?.emitToUser(userBId, 'match', {
+    this.realtime.emitMatch(userBId, {
       matchId: match.id,
+      conversationId: conversation.id,
       matchedUserId: userAId,
     });
-
-    console.log('🔥 MATCH CREATED:', match.id);
 
     return match;
   }
