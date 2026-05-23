@@ -1,22 +1,24 @@
-import "server-only";
+// packages/shared/src/auth.ts
 
-import { cookies } from "next/headers";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-export async function getUserFromCookie() {
-  const token = (await cookies()).get("token")?.value;
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-  if (!token) return null;
+export interface AuthUser extends JwtPayload {
+  id: string;
+  email?: string;
+}
 
+export async function verifyAccessToken(
+  token?: string,
+): Promise<AuthUser | null> {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!);
+    if (!token) return null;
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    return decoded as AuthUser;
   } catch {
     return null;
   }
-}
-export interface AuthUserPayload extends JwtPayload {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
 }
