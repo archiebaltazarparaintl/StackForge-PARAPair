@@ -9,7 +9,6 @@ import { SwipeModule } from './modules/swipe/swipe.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../../../.env',
     }),
 
     AuthModule,
