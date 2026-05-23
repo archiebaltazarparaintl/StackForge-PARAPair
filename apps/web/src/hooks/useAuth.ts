@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getMe } from '../lib/auth';
+import { getUserFromCookie } from '../lib/auth';
 
 export function useAuth(redirectIfNotAuth = '/register') {
   const router = useRouter();
@@ -12,7 +12,7 @@ export function useAuth(redirectIfNotAuth = '/register') {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const me = await getMe();
+      const me = await getUserFromCookie();
 
       if (!me) {
         localStorage.removeItem('token');
