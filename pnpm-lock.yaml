@@ -517,6 +517,19 @@ importers:
         specifier: ^6.7.0
         version: 6.7.0(typescript@5.9.3)
 
+  packages/db/src:
+    dependencies:
+      '@prisma/client':
+        specifier: 6.7.0
+        version: 6.7.0(prisma@6.7.0)
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+    devDependencies:
+      prisma:
+        specifier: 6.7.0
+        version: 6.7.0
+
   packages/shared:
     dependencies:
       jsonwebtoken:
@@ -6315,6 +6328,10 @@ snapshots:
       prisma: 6.7.0(typescript@5.9.3)
       typescript: 5.9.3
 
+  '@prisma/client@6.7.0(prisma@6.7.0)':
+    optionalDependencies:
+      prisma: 6.7.0
+
   '@prisma/config@6.7.0':
     dependencies:
       esbuild: 0.28.0
@@ -9446,6 +9463,15 @@ snapshots:
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
       react-is-19: react-is@19.2.6
+
+  prisma@6.7.0:
+    dependencies:
+      '@prisma/config': 6.7.0
+      '@prisma/engines': 6.7.0
+    optionalDependencies:
+      fsevents: 2.3.3
+    transitivePeerDependencies:
+      - supports-color
 
   prisma@6.7.0(typescript@5.9.3):
     dependencies:
