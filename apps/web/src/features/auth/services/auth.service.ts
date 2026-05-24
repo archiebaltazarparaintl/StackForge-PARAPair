@@ -70,3 +70,7 @@ export const loginUser = async (
 
   return response.data;
 };
+export const checkUsername = async (username: string) => {
+  const response = await axios.get(`${API_URL}/auth/check-username/${username}`);
+  return response.data as { available: boolean };
+};
