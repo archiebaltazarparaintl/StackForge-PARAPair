@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, Loader2, Mail, Send, ShieldCheck, X } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { Check, Loader2, Mail, Send, ShieldCheck } from 'lucide-react';
+import Toast from './Toast';
 
 interface Props {
   email: string;
@@ -19,41 +19,18 @@ interface Props {
   onVerifyOtp: () => void;
 }
 
-type Toast = { type: 'success' | 'error'; message: string } | null;
-
-function ToastPopup({ toast }: { toast: Toast }) {
-  if (!toast) return null;
-  return createPortal(
-    <div className={`
-      fixed top-6 right-6 sm:top-auto sm:bottom-6 sm:right-6 z-[9999]
-      flex items-center gap-3 px-5 py-3 rounded-2xl
-      shadow-[0_8px_30px_rgba(0,0,0,0.12)]
-      text-sm font-semibold
-      animate-in slide-in-from-bottom-4 fade-in duration-300
-      ${toast.type === 'success'
-        ? 'bg-emerald-500 text-white'
-        : 'bg-red-500 text-white'}
-    `}>
-      {toast.type === 'success'
-        ? <Check className="w-4 h-4 shrink-0" />
-        : <X className="w-4 h-4 shrink-0" />}
-      {toast.message}
-    </div>,
-    document.body
-  );
-}
+type ToastState = { type: 'success' | 'error'; message: string } | null;
 
 export default function OTPSection({
   email, setEmail, validEmail, otpSent, otpCode, setOtpCode,
   otpVerified, sendingOtp, verifyingOtp, resendCooldown,
   onSendOtp, onVerifyOtp,
 }: Props) {
-  const [toast, setToast] = useState<Toast>(null);
+  const [toast, setToast] = useState<ToastState>(null);
   const [prevVerified, setPrevVerified] = useState(false);
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
   };
 
   useEffect(() => {
@@ -77,7 +54,13 @@ export default function OTPSection({
 
   return (
     <div className="space-y-3">
-      <ToastPopup toast={toast} />
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       {/* EMAIL ROW */}
       <div className="space-y-2">
