@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, Loader2, Mail, Send, ShieldCheck, X } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { Check, Loader2, Mail, Send, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Props {
   email: string;
@@ -19,66 +20,34 @@ interface Props {
   onVerifyOtp: () => void;
 }
 
-type Toast = { type: 'success' | 'error'; message: string } | null;
-
-function ToastPopup({ toast }: { toast: Toast }) {
-  if (!toast) return null;
-  return createPortal(
-    <div className={`
-      fixed bottom-6 right-6 z-[9999]
-      flex items-center gap-3 px-5 py-3 rounded-2xl
-      shadow-[0_8px_30px_rgba(0,0,0,0.12)]
-      text-sm font-semibold
-      animate-in slide-in-from-bottom-4 fade-in duration-300
-      ${toast.type === 'success'
-        ? 'bg-emerald-500 text-white'
-        : 'bg-red-500 text-white'}
-    `}>
-      {toast.type === 'success'
-        ? <Check className="w-4 h-4 shrink-0" />
-        : <X className="w-4 h-4 shrink-0" />}
-      {toast.message}
-    </div>,
-    document.body
-  );
-}
-
 export default function OTPSection({
   email, setEmail, validEmail, otpSent, otpCode, setOtpCode,
   otpVerified, sendingOtp, verifyingOtp, resendCooldown,
   onSendOtp, onVerifyOtp,
 }: Props) {
-  const [toast, setToast] = useState<Toast>(null);
   const [prevVerified, setPrevVerified] = useState(false);
-
-  const showToast = (type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   useEffect(() => {
     if (otpVerified && !prevVerified) {
-      showToast('success', 'OTP verified successfully!');
+      toast.success('OTP verified successfully!');
       setPrevVerified(true);
     }
   }, [otpVerified, prevVerified]);
 
   const handleVerify = async () => {
     if (otpCode.length !== 6) {
-      showToast('error', 'OTP must contain 6 digits.');
+      toast.error('OTP must contain 6 digits.');
       return;
     }
     try {
       await onVerifyOtp();
     } catch {
-      showToast('error', 'Invalid OTP code.');
+      toast.error('Invalid OTP code.');
     }
   };
 
   return (
     <div className="space-y-3">
-      <ToastPopup toast={toast} />
-
       {/* EMAIL ROW */}
       <div className="space-y-2">
         <label className="ml-1 text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500">
