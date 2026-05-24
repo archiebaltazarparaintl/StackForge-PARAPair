@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -38,6 +39,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('check-username/:username')
+  checkUsername(@Param('username') username: string) {
+    return this.authService.checkUsername(username);
   }
 
   @Get('me')
