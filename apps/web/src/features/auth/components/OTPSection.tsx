@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Check, Loader2, Mail, Send, ShieldCheck, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   email: string;
@@ -19,6 +20,28 @@ interface Props {
 }
 
 type Toast = { type: 'success' | 'error'; message: string } | null;
+
+function ToastPopup({ toast }: { toast: Toast }) {
+  if (!toast) return null;
+  return createPortal(
+    <div className={`
+      fixed bottom-6 right-6 z-[9999]
+      flex items-center gap-3 px-5 py-3 rounded-2xl
+      shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+      text-sm font-semibold
+      animate-in slide-in-from-bottom-4 fade-in duration-300
+      ${toast.type === 'success'
+        ? 'bg-emerald-500 text-white'
+        : 'bg-red-500 text-white'}
+    `}>
+      {toast.type === 'success'
+        ? <Check className="w-4 h-4 shrink-0" />
+        : <X className="w-4 h-4 shrink-0" />}
+      {toast.message}
+    </div>,
+    document.body
+  );
+}
 
 export default function OTPSection({
   email, setEmail, validEmail, otpSent, otpCode, setOtpCode,
@@ -54,6 +77,8 @@ export default function OTPSection({
 
   return (
     <div className="space-y-3">
+      <ToastPopup toast={toast} />
+
       {/* EMAIL ROW */}
       <div className="space-y-2">
         <label className="ml-1 text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500">
@@ -85,7 +110,7 @@ export default function OTPSection({
         </div>
       </div>
 
-      {/* OTP INPUT ROW — always visible once sent, no layout shift */}
+      {/* OTP INPUT ROW */}
       {otpSent && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -114,17 +139,6 @@ export default function OTPSection({
               <><ShieldCheck className="w-4 h-4" /> Verified</>
             ) : 'Verify OTP'}
           </button>
-        </div>
-      )}
-
-      {/* TOAST */}
-      {toast && (
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all
-          ${toast.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
-          {toast.type === 'success'
-            ? <Check className="w-4 h-4 shrink-0" />
-            : <X className="w-4 h-4 shrink-0" />}
-          {toast.message}
         </div>
       )}
     </div>

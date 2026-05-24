@@ -56,6 +56,8 @@ export default function RegisterForm() {
   // FORM
   const [fullname, setFullname] =
     useState('');
+  
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [username, setUsername] =
@@ -606,6 +608,8 @@ export default function RegisterForm() {
                 <PasswordField
                   label="Password"
                   value={password}
+                  onFocus={() => setConfirmPasswordFocused(false)}
+                  onBlur={() => setConfirmPasswordFocused(true)}
                   onChange={(e) =>
                     setPassword(
                       e.target.value,
@@ -619,43 +623,20 @@ export default function RegisterForm() {
                   }
                 />
 
-                {password.length >
-                  0 && (
+                {password.length > 0 && !confirmPasswordFocused && (
                   <PasswordStrength
-                    passwordChecks={
-                      passwordChecks
-                    }
+                    passwordChecks={passwordChecks}
                   />
                 )}
 
                 <PasswordField
                   label="Confirm Password"
-                  value={
-                    confirmPassword
-                  }
-                  onChange={(e) =>
-                    setConfirmPassword(
-                      e.target.value,
-                    )
-                  }
-                  showPassword={
-                    showPassword
-                  }
-                  setShowPassword={
-                    setShowPassword
-                  }
-                  error={
-                    confirmPassword &&
-                    !passwordsMatch
-                      ? 'Passwords do not match'
-                      : undefined
-                  }
-                  success={
-                    confirmPassword &&
-                    passwordsMatch
-                      ? 'Passwords match'
-                      : undefined
-                  }
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  error={confirmPassword && !passwordsMatch ? 'Passwords do not match' : undefined}
+                  success={confirmPassword && passwordsMatch ? 'Passwords match' : undefined}
                 />
 
                 {error && (
