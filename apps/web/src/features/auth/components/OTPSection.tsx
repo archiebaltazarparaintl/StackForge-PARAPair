@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState } from 'react';
 import { Check, Loader2, Mail, Send, ShieldCheck } from 'lucide-react';
-import Toast from './Toast';
+import toast from 'react-hot-toast';
 
 interface Props {
   email: string;
@@ -19,49 +20,34 @@ interface Props {
   onVerifyOtp: () => void;
 }
 
-type ToastState = { type: 'success' | 'error'; message: string } | null;
-
 export default function OTPSection({
   email, setEmail, validEmail, otpSent, otpCode, setOtpCode,
   otpVerified, sendingOtp, verifyingOtp, resendCooldown,
   onSendOtp, onVerifyOtp,
 }: Props) {
-  const [toast, setToast] = useState<ToastState>(null);
   const [prevVerified, setPrevVerified] = useState(false);
-
-  const showToast = (type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-  };
 
   useEffect(() => {
     if (otpVerified && !prevVerified) {
-      showToast('success', 'OTP verified successfully!');
+      toast.success('OTP verified successfully!');
       setPrevVerified(true);
     }
   }, [otpVerified, prevVerified]);
 
   const handleVerify = async () => {
     if (otpCode.length !== 6) {
-      showToast('error', 'OTP must contain 6 digits.');
+      toast.error('OTP must contain 6 digits.');
       return;
     }
     try {
       await onVerifyOtp();
     } catch {
-      showToast('error', 'Invalid OTP code.');
+      toast.error('Invalid OTP code.');
     }
   };
 
   return (
     <div className="space-y-3">
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       {/* EMAIL ROW */}
       <div className="space-y-2">
         <label className="ml-1 text-[11px] uppercase tracking-[0.2em] font-bold text-slate-500">
