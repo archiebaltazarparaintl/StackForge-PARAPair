@@ -201,6 +201,7 @@ export default function RegisterForm() {
   }, [
     fullname,
     validUsername,
+    usernameAvailable,
     birthDate,
     validEmail,
     strongPassword,
@@ -550,34 +551,13 @@ export default function RegisterForm() {
                     autoComplete="name"
                   />
 
-                  <InputField
-                    label="Username"
+                  <UsernameField
                     value={username}
-                    onChange={(e) => {
-                      setUsername(
-                        e.target.value.replace(
-                          /\s/g,
-                          '',
-                        ),
-                      );
-
+                    onChange={(val) => {
+                      setUsername(val);
                       setOtpVerified(false);
                     }}
-                    placeholder="kevinfrance"
-                    icon={AtSign}
-                    autoComplete="username"
-                    error={
-                      username &&
-                      !validUsername
-                        ? 'Username must be 3-20 characters.'
-                        : undefined
-                    }
-                    success={
-                      username &&
-                      validUsername
-                        ? 'Valid username'
-                        : undefined
-                    }
+                    onAvailabilityChange={setUsernameAvailable}
                   />
                 </div>
 
