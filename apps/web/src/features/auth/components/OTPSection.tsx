@@ -25,7 +25,7 @@ function ToastPopup({ toast }: { toast: Toast }) {
   if (!toast) return null;
   return createPortal(
     <div className={`
-      fixed bottom-6 right-6 z-[9999]
+      fixed top-6 right-6 sm:top-auto sm:bottom-6 sm:right-6 z-[9999]
       flex items-center gap-3 px-5 py-3 rounded-2xl
       shadow-[0_8px_30px_rgba(0,0,0,0.12)]
       text-sm font-semibold
