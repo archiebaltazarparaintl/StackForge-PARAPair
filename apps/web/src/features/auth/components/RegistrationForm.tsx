@@ -25,6 +25,7 @@
 // } from 'lucide-react';
 
 // import InputField from './InputField';
+import UsernameField from './UsernameField';
 // import PasswordField from './PasswordField';
 // import PasswordStrength from './PasswordStrength';
 // import OTPSection from './OTPSection';
@@ -44,7 +45,8 @@
 //   const [fullname, setFullname] =
 //     useState('');
 
-//   const [username, setUsername] =
+//   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [username, setUsername] =
 //     useState('');
 
 //   const [birthDate, setBirthDate] =
@@ -159,7 +161,7 @@
 //   const canSubmit = useMemo(() => {
 //     return (
 //       fullname.trim().length > 0 &&
-//       validUsername &&
+//       validUsername && usernameAvailable === true &&
 //       birthDate &&
 //       validEmail &&
 //       strongPassword &&
@@ -606,6 +608,7 @@ import { motion } from 'framer-motion';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
 import InputField from './InputField';
+import UsernameField from './UsernameField';
 import PasswordField from './PasswordField';
 import PasswordStrength from './PasswordStrength';
 import OTPSection from './OTPSection';
@@ -630,6 +633,7 @@ export default function RegisterForm() {
   const [fullname, setFullname] =
     useState('');
 
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [username, setUsername] =
     useState('');
 
@@ -762,7 +766,7 @@ export default function RegisterForm() {
     return (
       fullname.trim().length >
         0 &&
-      validUsername &&
+      validUsername && usernameAvailable === true &&
       birthDate &&
       validEmail &&
       strongPassword &&
