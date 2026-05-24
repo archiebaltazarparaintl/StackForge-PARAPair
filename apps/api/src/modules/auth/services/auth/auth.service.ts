@@ -14,6 +14,7 @@ import { VerifyOtpDto } from '../../dto/verify-otp.dto';
 
 @Injectable()
 export class AuthService {
+  [x: string]: any;
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
