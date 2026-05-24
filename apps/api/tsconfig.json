@@ -20,6 +20,11 @@
 
     "baseUrl": "./",
 
+    "paths": {
+      "@repo/db": ["../../packages/db/src/index.ts"],
+      "@repo/db/*": ["../../packages/db/src/*"]
+    },
+
     "incremental": true,
 
     "skipLibCheck": true,
@@ -37,9 +42,5 @@
 
   "include": ["src/**/*"],
 
-  "exclude": ["node_modules", "dist"],
-  "paths": {
-    "@repo/db": ["packages/db/src/index.ts"],
-    "@repo/db/*": ["packages/db/src/*"]
-  }
+  "exclude": ["node_modules", "dist"]
 }
