@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -6,7 +7,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
+  SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -55,12 +58,20 @@ export default function LoginForm() {
   const [error, setError] =
     useState('');
 
-  const validForm = useMemo(() => {
-    return (
-      username.trim().length >= 3 &&
-      password.length >= 6
-    );
-  }, [username, password]);
+  const [mounted, setMounted] = useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+const validForm = useMemo(() => {
+  return (
+    username.trim().length >= 3 &&
+    password.length >= 6
+  );
+}, [username, password]);
+
+const isDisabled = !mounted ? false : !validForm;
 
   const handleSubmit = useCallback(
     async (
@@ -276,7 +287,7 @@ export default function LoginForm() {
                 <InputField
                   label="Username"
                   value={username}
-                  onChange={(e) =>
+                  onChange={(e: { target: { value: SetStateAction<string>; }; }) =>
                     setUsername(
                       e.target.value,
                     )
@@ -328,14 +339,10 @@ export default function LoginForm() {
                 )}
 
                 <SubmitButton
-                  loading={loading}
-                  disabled={
-                    !validForm
-                  }
-                  icon={
-                    ArrowRight
-                  }
-                >
+  loading={loading}
+  disabled={isDisabled}
+  icon={ArrowRight}
+>
                   Continue
                 </SubmitButton>
 
