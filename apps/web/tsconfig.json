@@ -17,6 +17,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "baseUrl": "./",
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
@@ -46,8 +47,8 @@
       "@/utils/*": [
         "./src/utils/*"
       ],
-      "@repo/db": ["packages/db/src/index.ts"],
-      "@repo/db/*": ["packages/db/src/*"]
+      "@repo/db": ["../../packages/db/src/index.ts"],
+      "@repo/db/*": ["../../packages/db/src/*"]
     }
   },
   "include": [
