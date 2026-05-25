@@ -22,7 +22,6 @@ import {
   Sparkles,
   User,
   Calendar,
-  AtSign,
   ShieldCheck,
   HeartHandshake,
 } from 'lucide-react';

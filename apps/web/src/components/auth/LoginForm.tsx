@@ -92,6 +92,7 @@ const isDisabled = !mounted ? false : !validForm;
             username:
               username.trim(),
             password,
+            lastLogin: new Date().toISOString(),
           });
 
         tokenStorage.set(
