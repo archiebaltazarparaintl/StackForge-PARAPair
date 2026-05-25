@@ -51,6 +51,12 @@ export class AuthRepository {
       },
     });
   }
+  async updateLastLogin(userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { lastLoginAt: new Date() },
+    });
+  }
 
   // =========================================
   // OTP METHODS
