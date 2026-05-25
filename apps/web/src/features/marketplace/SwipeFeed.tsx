@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, {
@@ -137,7 +139,7 @@ const SwipeCard = React.memo(
         </div>
 
         <p className="text-slate-500 text-xs font-medium line-clamp-2 mt-1 italic opacity-80">
-          "{item.bio}"
+          &rdquo;{item.bio}&rdquo;
         </p>
 
         <div className="flex flex-wrap gap-2 mt-4">

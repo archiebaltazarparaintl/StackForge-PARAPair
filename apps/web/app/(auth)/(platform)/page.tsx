@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '../../../web/src/hooks/useAuth';
+import { useAuth } from '../../../../web/src/hooks/useAuth';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth('/register');

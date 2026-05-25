@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { 
-  Plus, Search, Filter, MoreVertical, Edit2, Trash2, 
-  Eye, Pause, Play, Calendar, MapPin, DollarSign,
-  ChevronDown, X, ArrowLeft
+  Plus, Search, MoreVertical, Edit2, Trash2, 
+  Pause, Play, Calendar, MapPin, DollarSign,
+  X, ArrowLeft
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Exo_2 } from 'next/font/google';

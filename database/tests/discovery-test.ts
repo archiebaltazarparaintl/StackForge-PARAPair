@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../../../database/generated/client'";
+import { PrismaClient } from "../../packages/db/generated/client";
 import { DiscoveryService } from "../../apps/api/src/modules/discovery/discovery.service";
 
 const prisma = new PrismaClient();

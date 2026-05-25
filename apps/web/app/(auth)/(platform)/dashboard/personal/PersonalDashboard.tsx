@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Heart, Zap, Eye, Star, UserCheck, Plus, 
+  Heart, Zap, Eye, UserCheck, Plus, 
   Trash2, Edit3, X, Save, FolderHeart, 
-  Briefcase, GraduationCap, Globe 
+  Briefcase, Globe 
 } from 'lucide-react';
 
 interface PortfolioItem {

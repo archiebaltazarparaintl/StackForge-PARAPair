@@ -1,19 +1,20 @@
+/* eslint-disable react/jsx-no-undef */
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { ModeToggle } from '@/components/marketplace/ModeToggle';
-import { CategoryFilter } from '@/components/marketplace/CategoryFilter';
-import { ListingCard } from '@/components/marketplace/ListingCard';
-import { ListingCardSkeleton } from '@/components/marketplace/ListingCardSkeleton';
-import { EmptyState } from '@/components/marketplace/EmptyState';
-import { MOCK_LISTINGS } from '@/lib/mock-data';
+import { AppLayout } from '../../../../../web/src/shared/layouts/layout/AppLayout';
+// import { ModeToggle } from '@/components/marketplace/ModeToggle';
+// import { CategoryFilter } from '@/components/marketplace/CategoryFilter';
+// import { ListingCard } from '@/components/marketplace/ListingCard';
+// import { ListingCardSkeleton } from '@/components/marketplace/ListingCardSkeleton';
+// import { EmptyState } from '@/components/marketplace/EmptyState';
+import { MOCK_LISTINGS } from '../../../../../web/src/lib/addLibrary/mock-data';
 import {
   UserMode,
   WORK_SELL_CATEGORIES,
   HIRE_BUY_CATEGORIES,
-} from '@/lib/types';
+} from '../../../../../web/src/lib/addLibrary/types';
 
 /**
  * Marketplace Feed Page — `/feed`

@@ -1,8 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+ 
 'use client';
 
-import React, {
-  useEffect,
+import {
   useState,
 } from 'react';
 
@@ -41,7 +40,6 @@ export default function SelectTypePage() {
 
   const [
     profileCount,
-    setProfileCount,
   ] = useState(0);
 
 //   useEffect(() => {

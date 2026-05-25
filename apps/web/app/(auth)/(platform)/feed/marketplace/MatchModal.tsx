@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Sparkles, MessageCircle, X } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 export default function MatchModal({ onClose }: { onClose: () => void }) {
   return (

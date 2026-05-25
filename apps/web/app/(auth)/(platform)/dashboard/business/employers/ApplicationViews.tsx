@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Filter, Check, X, Eye, Clock, Mail, Phone, Calendar, MapPin, Briefcase, Star, ChevronDown, MoreVertical } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Check, X, Eye, Clock, Mail, Phone, Calendar, Briefcase, MoreVertical } from 'lucide-react';
 import { Exo_2 } from 'next/font/google';
 
 const exo2 = Exo_2({ subsets: ['latin'], weight: ['400', '700', '800'] });

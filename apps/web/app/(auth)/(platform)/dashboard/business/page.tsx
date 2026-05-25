@@ -10,7 +10,7 @@ import {
 
 import { useEffect, useState } from 'react';
 
-import StatsCard from '../../packages/ui/cards/StatsCard';
+import { StatCard as StatsCard } from '../../../../../../web/src/components/admin/StatCard';
 
 import { getBusinessStats } from '../services/dashboard.service';
 

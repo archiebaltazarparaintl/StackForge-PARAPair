@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronRight, Briefcase } from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
 import { Exo_2 } from 'next/font/google';
 
 const exo2 = Exo_2({ subsets: ['latin'], weight: ['400', '700', '800'] });

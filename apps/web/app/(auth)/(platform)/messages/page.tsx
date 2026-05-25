@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState } from 'react';
@@ -100,7 +102,7 @@ export default function MessagesPage() {
               <div className="flex justify-start">
                 <div className="max-w-[70%] bg-white border border-slate-100 p-5 rounded-[28px] rounded-tl-none shadow-sm">
                   <p className="text-sm text-slate-600 leading-relaxed font-medium italic">
-                    "Hey! I saw your profile on PARAPair and loved your design style. Would you be open to a quick collaboration call?"
+                    &rdquo;Hey! I saw your profile on PARAPair and loved your design style. Would you be open to a quick collaboration call?&rdquo;
                   </p>
                 </div>
               </div>
@@ -108,7 +110,7 @@ export default function MessagesPage() {
               <div className="flex justify-end">
                 <div className="max-w-[70%] bg-[#0D1B2A] p-5 rounded-[28px] rounded-tr-none text-white shadow-xl shadow-slate-200">
                   <p className="text-sm font-bold leading-relaxed">
-                    Absolutely! I'm free tomorrow after 2:00 PM. Let's build something great together.
+                    Absolutely! I&rsquo;m free tomorrow after 2:00 PM. Let&rsquo;s build something great together.
                   </p>
                   <div className="flex justify-end mt-2 opacity-30"><CheckCheck size={14} /></div>
                 </div>

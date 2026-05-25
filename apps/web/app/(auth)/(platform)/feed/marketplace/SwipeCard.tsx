@@ -1,3 +1,6 @@
+import { motion } from "framer-motion";
+import { Crown, User, Building2, Sparkles } from "lucide-react";
+
 // Inside SwipeFeed's SwipeCard component
 <motion.div
   style={{ x, rotate, willChange: "transform" }}

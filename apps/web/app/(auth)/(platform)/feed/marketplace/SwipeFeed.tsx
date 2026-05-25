@@ -1,8 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence, useAnimation, useMotionValue, useTransform } from 'framer-motion';
-import { X, Sparkles, MapPin, Star, RotateCcw, Crown, User, Building2, ArrowRightLeft } from 'lucide-react';
+import { X, Sparkles, Star, RotateCcw, Crown, User, Building2 } from 'lucide-react';
 
 // --- MOCK DATA ---
 const APPLICANTS = [

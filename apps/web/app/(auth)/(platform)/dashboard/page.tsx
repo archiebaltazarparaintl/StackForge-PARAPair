@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getUserFromCookie } from '../../../src/lib/auth';
+import { getUserFromCookie } from '../../../../src/lib/auth';
 
 export default async function DashboardPage() {
   const user = await getUserFromCookie();

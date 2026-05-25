@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Plus, Trash2, MapPin, DollarSign, Briefcase, Clock } from 'lucide-react';
+import { X, Plus, Trash2, MapPin, DollarSign } from 'lucide-react';
 import { Exo_2 } from 'next/font/google';
 
 const exo2 = Exo_2({ subsets: ['latin'], weight: ['400', '700', '800'] });

@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   ExternalLink
 } from 'lucide-react';
-import Navbar from '../landing/Navbar';
+import Navbar from '../../../../web/src/shared/components/navigation/Navbar';
 
 export default function PersonalDashboard() {
   const router = useRouter();

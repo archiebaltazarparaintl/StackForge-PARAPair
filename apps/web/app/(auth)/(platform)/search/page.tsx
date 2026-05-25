@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
 import { Search, X, Filter, MapPin, DollarSign, Building2, User } from 'lucide-react';
 import { Exo_2 } from 'next/font/google';
-import BottomNav from '@/components/shared/BottomNav';
+import BottomNav from '../../../../../web/src/shared/components/BottomNav';
 
 const exo2 = Exo_2({ subsets: ['latin'], weight: ['400', '700', '800'] });
 

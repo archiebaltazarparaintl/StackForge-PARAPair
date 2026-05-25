@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, MessageSquare, User, Building2, MoreVertical, Star, ArrowUpRight } from 'lucide-react';
+import { Search, MessageSquare, User, Building2, Star, ArrowUpRight } from 'lucide-react';
 import { Exo_2 } from 'next/font/google';
 
 const exo2 = Exo_2({ subsets: ['latin'], weight: ['400', '700', '800'] });
