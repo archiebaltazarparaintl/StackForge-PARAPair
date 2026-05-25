@@ -99,7 +99,7 @@ const handleContinue = async () => {
     console.log('GUEST ID:', guestId);
     console.log('INTERESTS:', selected);
 
-    router.push('/login');
+    router.push('/api/swipe');
   } catch (error) {
     console.log(error);
     alert('Failed to continue');
