@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion } from 'framer-motion';
@@ -44,7 +42,7 @@ export default function MatchOverlay({ matchData, onClose }: MatchOverlayProps) 
            </div>
         </div>
 
-        <h2 className="text-3xl font-[900] text-[#0D1B2A] tracking-tighter mb-2">It&rsquo;s a Parapair! 🎉</h2>
+        <h2 className="text-3xl font-[900] text-[#0D1B2A] tracking-tighter mb-2">It's a Parapair! 🎉</h2>
         <p className="text-slate-500 text-sm mb-10 leading-relaxed font-medium">
           You and {matchData.name} have paired.<br/>Start a chat and build something great.
         </p>

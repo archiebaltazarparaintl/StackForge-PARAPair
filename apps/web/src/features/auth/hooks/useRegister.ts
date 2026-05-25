@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { sendOtp, verifyOtp, registerUser } from '@/features/services/auth.service';
+import { sendOtp, verifyOtp, registerUser } from '@/features/auth/services/auth.service';
 
 export function useRegister() {
   const [otpSent, setOtpSent] = useState(false);

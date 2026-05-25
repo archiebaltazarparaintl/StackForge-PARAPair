@@ -1,14 +1,16 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { Info, MapPin, Star } from 'lucide-react';
+import { Info} from 'lucide-react';
 import Link from 'next/link';
 
 interface SwipeCardProps {
   data: any;
   isTop: boolean;
   onSwipe: (dir: 'left' | 'right') => void;
-}
+} 
 
 export default function SwipeCard({ data, isTop, onSwipe }: SwipeCardProps) {
   const x = useMotionValue(0);
