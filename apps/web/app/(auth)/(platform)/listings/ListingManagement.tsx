@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { 
-  Plus, Search, Filter, MoreVertical, Edit2, Trash2, 
-  Eye, Pause, Play, Calendar, MapPin, DollarSign,
-  ChevronDown, X
+  Plus, Search, MoreVertical, Edit2, Trash2, 
+  Pause, Play, Calendar, MapPin, DollarSign,
+  X
 } from 'lucide-react';
 
 type ListingStatus = 'active' | 'paused' | 'draft';
