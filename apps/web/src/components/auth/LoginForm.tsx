@@ -30,7 +30,7 @@ import { loginUser } from '@/features/auth/services/auth.service';
 
 import { tokenStorage } from '@/lib/storage';
 
-import InputField from '../auth/LoginForm';
+import InputField from '../../features/auth/components/InputField';
 import PasswordField from '../../features/auth/components/PasswordField';
 import SubmitButton from '../../features/auth/components/SubmitButton';
 import AlertMessage from '../../features/auth/components/AlertMessage';
