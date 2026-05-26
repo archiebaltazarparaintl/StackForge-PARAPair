@@ -1,0 +1,145 @@
+///////////////////////////////////////////////////////////////
+// FEATURE FLAGS + EXPERIMENTATION MODULE
+// Enterprise-grade rollout + A/B testing + governance
+///////////////////////////////////////////////////////////////
+
+enum FlagType {
+  BOOLEAN
+  STRING
+  NUMBER
+  JSON
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  ABORTED
+}
+
+enum AssignmentStrategy {
+  RANDOM
+  USER_ID_HASH
+  GEO
+  DEVICE
+  WEIGHTED
+}
+
+model FeatureFlag {
+  id              String @id @default(cuid())
+
+  key             String @unique
+  name            String
+
+  type            FlagType
+
+  isEnabled       Boolean @default(false)
+
+  defaultValue    Json?
+
+  rolloutPercent  Float @default(0)
+
+  targetRules     Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assignments     FlagAssignment[]
+
+  @@index([key])
+}
+
+model FlagAssignment {
+  id              String @id @default(cuid())
+
+  flagId          String
+
+  userId          String?
+
+  value           Json
+
+  assignedAt      DateTime @default(now())
+
+  flag            FeatureFlag @relation(fields: [flagId], references: [id])
+
+  @@index([flagId])
+  @@index([userId])
+}
+
+model Experiment {
+  id              String @id @default(cuid())
+
+  name            String
+
+  description     String?
+
+  status          ExperimentStatus @default(DRAFT)
+
+  strategy        AssignmentStrategy
+
+  startAt         DateTime?
+  endAt           DateTime?
+
+  primaryMetric   String
+
+  config          Json?
+
+  createdAt       DateTime @default(now())
+
+  variants        ExperimentVariant[]
+
+  @@index([status])
+}
+
+model ExperimentVariant {
+  id              String @id @default(cuid())
+
+  experimentId    String
+
+  name            String
+
+  weight          Float @default(0.5)
+
+  config          Json?
+
+  experiment      Experiment @relation(fields: [experimentId], references: [id])
+
+  @@index([experimentId])
+}
+
+model ExperimentAssignment {
+  id              String @id @default(cuid())
+
+  experimentId    String
+
+  userId          String
+
+  variantId       String
+
+  assignedAt      DateTime @default(now())
+
+  metadata        Json?
+
+  @@unique([experimentId, userId])
+  @@index([userId])
+}
+
+model ExperimentMetricEvent {
+  id              String @id @default(cuid())
+
+  experimentId    String
+
+  userId          String?
+
+  variantId       String?
+
+  metricName      String
+
+  value           Float
+
+  createdAt       DateTime @default(now())
+
+  @@index([experimentId])
+  @@index([metricName])
+}

@@ -1,0 +1,469 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE LEGAL & COMPLIANCE MODULE
+/// Module: GDPR / CCPA / DPA / SOC2 / ISO27001
+/// Classification: Regulated Enterprise Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAIL
+  MARKETING_SMS
+  DATA_PROCESSING
+  COOKIE_CONSENT
+  PROFILING_CONSENT
+  AI_PROCESSING
+  THIRD_PARTY_SHARING
+}
+
+enum ConsentStatus {
+  GRANTED
+  REVOKED
+  EXPIRED
+}
+
+enum DataRequestType {
+  ACCESS
+  EXPORT
+  RECTIFICATION
+  DELETION
+  RESTRICTION
+  OBJECTION
+  PORTABILITY
+}
+
+enum DataRequestStatus {
+  PENDING
+  VERIFIED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  EXPIRED
+}
+
+enum LegalHoldStatus {
+  ACTIVE
+  RELEASED
+  EXPIRED
+}
+
+enum BreachSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BreachStatus {
+  DETECTED
+  INVESTIGATING
+  REPORTED
+  RESOLVED
+}
+
+enum ComplianceRegion {
+  GDPR
+  CCPA
+  PH_DPA
+  SOC2
+  ISO27001
+}
+
+/// =========================================================
+/// USER CONSENT RECORDS
+/// =========================================================
+
+model UserConsentRecord {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  consentType                     ConsentType
+
+  consentStatus                   ConsentStatus                 @default(GRANTED)
+
+  policyVersion                   String
+
+  acceptedAt                      DateTime                      @default(now())
+
+  revokedAt                       DateTime?
+
+  expiresAt                       DateTime?
+
+  ipAddress                       String?
+
+  userAgent                       String?
+
+  consentEvidence                 Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([consentType])
+  @@index([consentStatus])
+  @@index([acceptedAt])
+}
+
+/// =========================================================
+/// PRIVACY POLICY VERSIONS
+/// =========================================================
+
+model PrivacyPolicyVersion {
+  id                              String                        @id @default(uuid())
+
+  version                         String                        @unique
+
+  title                           String
+
+  contentStorageKey               String
+
+  checksum                        String?
+
+  effectiveAt                     DateTime
+
+  deprecatedAt                    DateTime?
+
+  createdByUserId                 String?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  createdByUser                   User?                         @relation(fields: [createdByUserId], references: [id])
+
+  @@index([effectiveAt])
+}
+
+/// =========================================================
+/// TERMS OF SERVICE VERSIONS
+/// =========================================================
+
+model TermsOfServiceVersion {
+  id                              String                        @id @default(uuid())
+
+  version                         String                        @unique
+
+  title                           String
+
+  contentStorageKey               String
+
+  checksum                        String?
+
+  effectiveAt                     DateTime
+
+  deprecatedAt                    DateTime?
+
+  createdByUserId                 String?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  createdByUser                   User?                         @relation(fields: [createdByUserId], references: [id])
+
+  @@index([effectiveAt])
+}
+
+/// =========================================================
+/// DATA SUBJECT REQUESTS (DSAR)
+/// =========================================================
+
+model DataSubjectRequest {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  requestType                     DataRequestType
+
+  status                          DataRequestStatus            @default(PENDING)
+
+  requestReason                   String?
+
+  verificationTokenHash           String?
+
+  verifiedAt                      DateTime?
+
+  processedAt                     DateTime?
+
+  rejectedAt                      DateTime?
+
+  completedAt                     DateTime?
+
+  expiresAt                       DateTime?
+
+  exportLocation                  String?
+
+  processorNotes                  String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([requestType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// DATA EXPORT REGISTRY
+/// =========================================================
+
+model UserDataExport {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  exportFormat                    String
+
+  exportLocation                  String
+
+  checksum                        String?
+
+  encrypted                       Boolean                       @default(true)
+
+  encryptionVersion               String?
+
+  expiresAt                       DateTime
+
+  downloadedAt                    DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// LEGAL HOLDS
+/// =========================================================
+
+model LegalHold {
+  id                              String                        @id @default(uuid())
+
+  workspaceId                     String?
+
+  userId                          String?
+
+  status                          LegalHoldStatus              @default(ACTIVE)
+
+  legalCaseReference              String?
+
+  reason                          String
+
+  imposedBy                       String?
+
+  imposedAt                       DateTime                      @default(now())
+
+  releasedAt                      DateTime?
+
+  expiresAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  workspace                       Workspace?                    @relation(fields: [workspaceId], references: [id])
+
+  user                            User?                         @relation(fields: [userId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([status])
+}
+
+/// =========================================================
+/// SECURITY BREACH INCIDENTS
+/// =========================================================
+
+model SecurityBreachIncident {
+  id                              String                        @id @default(uuid())
+
+  incidentKey                     String                        @unique
+
+  severity                        BreachSeverity
+
+  status                          BreachStatus                 @default(DETECTED)
+
+  affectedRegion                  ComplianceRegion?
+
+  detectedAt                      DateTime                      @default(now())
+
+  reportedAt                      DateTime?
+
+  resolvedAt                      DateTime?
+
+  affectedUsersCount              Int?
+
+  rootCause                       String?
+
+  remediationActions              Json?
+
+  evidenceLocation                String?
+
+  regulatorNotified               Boolean                       @default(false)
+
+  customerNotified                Boolean                       @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  @@index([severity])
+  @@index([status])
+  @@index([detectedAt])
+}
+
+/// =========================================================
+/// LAW ENFORCEMENT REQUESTS
+/// =========================================================
+
+model LawEnforcementRequest {
+  id                              String                        @id @default(uuid())
+
+  requestReference                String                        @unique
+
+  requestingAgency                String
+
+  jurisdiction                    String?
+
+  legalBasis                      String?
+
+  requestedData                   Json?
+
+  affectedUserId                  String?
+
+  receivedAt                      DateTime                      @default(now())
+
+  processedAt                     DateTime?
+
+  rejectedAt                      DateTime?
+
+  fulfilledAt                     DateTime?
+
+  processorNotes                  String?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  affectedUser                    User?                         @relation(fields: [affectedUserId], references: [id])
+
+  @@index([requestingAgency])
+  @@index([receivedAt])
+}
+
+/// =========================================================
+/// DATA RETENTION POLICIES
+/// =========================================================
+
+model DataRetentionPolicy {
+  id                              String                        @id @default(uuid())
+
+  policyKey                       String                        @unique
+
+  entityType                      String
+
+  retentionDays                   Int
+
+  archiveAfterDays                Int?
+
+  purgeAfterDays                  Int?
+
+  legalBasis                      String?
+
+  region                          ComplianceRegion?
+
+  enabled                         Boolean                       @default(true)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  executions                      RetentionExecution[]
+
+  @@index([entityType])
+  @@index([enabled])
+}
+
+/// =========================================================
+/// COMPLIANCE AUDITS
+/// =========================================================
+
+model ComplianceAudit {
+  id                              String                        @id @default(uuid())
+
+  auditKey                        String                        @unique
+
+  framework                       ComplianceRegion
+
+  auditor                         String?
+
+  auditPeriodStart                DateTime?
+
+  auditPeriodEnd                  DateTime?
+
+  findings                        Json?
+
+  remediationPlan                 Json?
+
+  passed                          Boolean?
+
+  completedAt                     DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([framework])
+  @@index([completedAt])
+}
+
+/// =========================================================
+/// COOKIE CONSENT RECORDS
+/// =========================================================
+
+model CookieConsentRecord {
+  id                              String                        @id @default(uuid())
+
+  userId                          String?
+
+  anonymousId                     String?
+
+  consentPayload                  Json
+
+  consentVersion                  String
+
+  ipAddress                       String?
+
+  userAgent                       String?
+
+  grantedAt                       DateTime                      @default(now())
+
+  revokedAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User?                         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([anonymousId])
+  @@index([grantedAt])
+}

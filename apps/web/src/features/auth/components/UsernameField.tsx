@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -43,7 +44,7 @@ export default function UsernameField({ value, onChange, onAvailabilityChange }:
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [value, validFormat]);
+  }, [value, validFormat, onAvailabilityChange]);
 
   const borderColor = !value
     ? 'border-slate-200'

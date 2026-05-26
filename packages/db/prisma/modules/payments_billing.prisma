@@ -1,0 +1,629 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE PAYMENTS & BILLING MODULE
+/// Module: Billing / Subscriptions / Invoices / Tax / Revenue
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum BillingProvider {
+  STRIPE
+  PAYPAL
+  XENDIT
+  PAYMONGO
+  ADYEN
+
+  GCASH
+  MAYA
+
+  PESONET
+  INSTAPAY
+
+  BANK_TRANSFER
+
+  WISE
+  MANUAL
+}
+
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CHARGEBACK
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_TRANSFER
+
+  GCASH
+  MAYA
+
+  PESONET
+  INSTAPAY
+
+  EWALLET
+
+  PAYPAL
+  APPLE_PAY
+  GOOGLE_PAY
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum TaxType {
+  VAT
+  SALES_TAX
+  WITHHOLDING
+}
+
+/// =========================================================
+/// BILLING CUSTOMERS
+/// =========================================================
+
+model BillingCustomer {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String                      @unique
+
+  provider                        BillingProvider
+
+  providerCustomerId              String
+
+  email                           String
+
+  billingName                     String?
+
+  country                         String?
+
+  taxId                           String?
+
+  isTaxExempt                     Boolean                     @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  paymentMethods                  PaymentMethod[]
+  subscriptions                   BillingSubscription[]
+  invoices                        Invoice[]
+
+  @@unique([provider, providerCustomerId])
+
+  @@index([workspaceId])
+  @@index([provider])
+}
+
+/// =========================================================
+/// PAYMENT METHODS
+/// =========================================================
+
+model PaymentMethod {
+  id                              String                      @id @default(uuid())
+
+  billingCustomerId               String
+
+  type                            PaymentMethodType
+
+  provider                        BillingProvider
+
+  providerPaymentMethodId         String
+
+  brand                           String?
+  last4                           String?
+
+  expiryMonth                     Int?
+  expiryYear                      Int?
+
+  isDefault                       Boolean                     @default(false)
+
+  fingerprint                     String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  billingCustomer                 BillingCustomer             @relation(fields: [billingCustomerId], references: [id])
+
+  @@unique([provider, providerPaymentMethodId])
+
+  @@index([billingCustomerId])
+  @@index([isDefault])
+}
+
+/// =========================================================
+/// SUBSCRIPTION PLANS
+/// =========================================================
+
+model SubscriptionPlan {
+  id                              String                      @id @default(uuid())
+
+  planKey                         String                      @unique
+
+  name                            String
+
+  description                     String?
+
+  billingCycle                    BillingCycle
+
+  amount                          Decimal                     @db.Decimal(12, 2)
+
+  currency                        String
+
+  trialDays                       Int?
+
+  isActive                        Boolean                     @default(true)
+
+  featureFlags                    Json?
+
+  limitsPayload                   Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  subscriptions                   BillingSubscription[]
+
+  @@index([billingCycle])
+  @@index([isActive])
+}
+
+/// =========================================================
+/// BILLING SUBSCRIPTIONS
+/// =========================================================
+
+model BillingSubscription {
+  id                              String                      @id @default(uuid())
+
+  billingCustomerId               String
+
+  subscriptionPlanId              String
+
+  provider                        BillingProvider
+
+  providerSubscriptionId          String
+
+  status                          SubscriptionStatus          @default(TRIALING)
+
+  startedAt                       DateTime
+
+  currentPeriodStart              DateTime
+  currentPeriodEnd                DateTime
+
+  canceledAt                      DateTime?
+  expiresAt                       DateTime?
+
+  autoRenew                       Boolean                     @default(true)
+
+  seats                           Int                         @default(1)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  billingCustomer                 BillingCustomer             @relation(fields: [billingCustomerId], references: [id])
+
+  subscriptionPlan                SubscriptionPlan            @relation(fields: [subscriptionPlanId], references: [id])
+
+  invoices                        Invoice[]
+
+  @@unique([provider, providerSubscriptionId])
+
+  @@index([billingCustomerId])
+  @@index([subscriptionPlanId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+}
+
+/// =========================================================
+/// INVOICES
+/// =========================================================
+
+model Invoice {
+  id                              String                      @id @default(uuid())
+
+  billingCustomerId               String
+
+  billingSubscriptionId           String?
+
+  invoiceNumber                   String                      @unique
+
+  status                          InvoiceStatus               @default(DRAFT)
+
+  currency                        String
+
+  subtotalAmount                  Decimal                     @db.Decimal(12, 2)
+  taxAmount                       Decimal                     @db.Decimal(12, 2)
+  totalAmount                     Decimal                     @db.Decimal(12, 2)
+
+  issuedAt                        DateTime                    @default(now())
+
+  dueAt                           DateTime?
+
+  paidAt                          DateTime?
+
+  voidedAt                        DateTime?
+
+  refundedAt                      DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  billingCustomer                 BillingCustomer             @relation(fields: [billingCustomerId], references: [id])
+
+  billingSubscription             BillingSubscription?        @relation(fields: [billingSubscriptionId], references: [id])
+
+  lineItems                       InvoiceLineItem[]
+
+  payments                        Payment[]
+
+  taxes                           InvoiceTax[]
+
+  @@index([billingCustomerId])
+  @@index([billingSubscriptionId])
+  @@index([status])
+  @@index([issuedAt])
+}
+
+/// =========================================================
+/// INVOICE LINE ITEMS
+/// =========================================================
+
+model InvoiceLineItem {
+  id                              String                      @id @default(uuid())
+
+  invoiceId                       String
+
+  description                     String
+
+  quantity                        Int                         @default(1)
+
+  unitPrice                       Decimal                     @db.Decimal(12, 2)
+
+  totalAmount                     Decimal                     @db.Decimal(12, 2)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  invoice                         Invoice                     @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+}
+
+/// =========================================================
+/// INVOICE TAXES
+/// =========================================================
+
+model InvoiceTax {
+  id                              String                      @id @default(uuid())
+
+  invoiceId                       String
+
+  taxType                         TaxType
+
+  taxRate                         Decimal                     @db.Decimal(5, 2)
+
+  taxAmount                       Decimal                     @db.Decimal(12, 2)
+
+  jurisdiction                    String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  invoice                         Invoice                     @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@index([taxType])
+}
+
+/// =========================================================
+/// PAYMENTS
+/// =========================================================
+
+model Payment {
+  id                              String                      @id @default(uuid())
+
+  invoiceId                       String
+
+  paymentMethodId                 String?
+
+  provider                        BillingProvider
+
+  providerPaymentId               String
+
+  status                          PaymentStatus               @default(PENDING)
+
+  amount                          Decimal                     @db.Decimal(12, 2)
+
+  currency                        String
+
+  processedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  refundedAt                      DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  invoice                         Invoice                     @relation(fields: [invoiceId], references: [id])
+
+  paymentMethod                   PaymentMethod?              @relation(fields: [paymentMethodId], references: [id])
+
+  refunds                         Refund[]
+
+  @@unique([provider, providerPaymentId])
+
+  @@index([invoiceId])
+  @@index([paymentMethodId])
+  @@index([status])
+  @@index([processedAt])
+}
+
+model BankAccount {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  accountName                     String
+
+  bankName                        String
+
+  accountNumberEncrypted          String
+
+  accountNumberLast4              String
+
+  routingNumberEncrypted          String?
+
+  swiftCode                       String?
+
+  iban                            String?
+
+  country                         String
+
+  currency                        String
+
+  isVerified                      Boolean                     @default(false)
+
+  verificationMethod              String?
+
+  verifiedAt                      DateTime?
+
+  isDefault                       Boolean                     @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  payouts                         Payout[]
+
+  @@index([workspaceId])
+  @@index([isDefault])
+}
+
+model WalletAccount {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  provider                        PaymentMethodType
+
+  mobileNumberEncrypted           String
+
+  mobileNumberLast4               String
+
+  accountName                     String?
+
+  isVerified                      Boolean                     @default(false)
+
+  verifiedAt                      DateTime?
+
+  isDefault                       Boolean                     @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  payouts                         Payout[]
+
+  @@index([workspaceId])
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+  CANCELED
+}
+
+model Payout {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  bankAccountId                   String?
+  walletAccountId                 String?
+
+  provider                        BillingProvider
+
+  amount                          Decimal                     @db.Decimal(12, 2)
+
+  currency                        String
+
+  status                          PayoutStatus                @default(PENDING)
+
+  externalReferenceId             String?
+
+  description                     String?
+
+  processedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  bankAccount                     BankAccount?                @relation(fields: [bankAccountId], references: [id])
+
+  walletAccount                   WalletAccount?              @relation(fields: [walletAccountId], references: [id])
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([processedAt])
+}
+
+model FinancialRiskEvent {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String?
+
+  paymentId                       String?
+
+  payoutId                        String?
+
+  riskType                        String
+
+  riskScore                       Float
+
+  investigationStatus             String?
+
+  notes                           String?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@index([workspaceId])
+  @@index([riskScore])
+}
+
+
+/// =========================================================
+/// REFUNDS
+/// =========================================================
+
+model Refund {
+  id                              String                      @id @default(uuid())
+
+  paymentId                       String
+
+  providerRefundId                String?
+
+  status                          RefundStatus                @default(PENDING)
+
+  amount                          Decimal                     @db.Decimal(12, 2)
+
+  currency                        String
+
+  reason                          String?
+
+  processedAt                     DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  payment                         Payment                     @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+/// =========================================================
+/// WEBHOOK EVENTS
+/// =========================================================
+
+model BillingWebhookEvent {
+  id                              String                      @id @default(uuid())
+
+  provider                        BillingProvider
+
+  eventId                         String
+
+  eventType                       String
+
+  payload                         Json
+
+  processed                       Boolean                     @default(false)
+
+  processedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  failureReason                   String?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@unique([provider, eventId])
+
+  @@index([provider])
+  @@index([eventType])
+  @@index([processed])
+}

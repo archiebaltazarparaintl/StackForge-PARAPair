@@ -1,0 +1,595 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE PERSONA & MARKETPLACE MODULE
+/// Module: Personas / Marketplace Identity / Skills / Discovery
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum PersonaType {
+  INDIVIDUAL
+  BUSINESS
+  AGENCY
+  RECRUITER
+  CREATOR
+  FREELANCER
+}
+
+enum PersonaStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  BANNED
+  ARCHIVED
+}
+
+enum MarketplaceMode {
+  WORK
+  HIRE
+  SELL
+  BUY
+}
+
+enum VerificationBadge {
+  NONE
+  VERIFIED
+  PREMIUM
+  ENTERPRISE
+  GOVERNMENT_VERIFIED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  LIMITED
+  UNAVAILABLE
+}
+
+enum VisibilityLevel {
+  PUBLIC
+  PLATFORM_ONLY
+  PRIVATE
+}
+
+enum ListingType {
+  SERVICE
+  JOB
+  PRODUCT
+  PROJECT
+  PARTNERSHIP
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  FILLED
+  EXPIRED
+  REMOVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+/// =========================================================
+/// PERSONA
+/// =========================================================
+
+model Persona {
+  id                              String                  @id @default(uuid())
+
+  workspaceId                     String
+
+  /// ---------- Identity ----------
+  type                            PersonaType
+  status                          PersonaStatus           @default(DRAFT)
+
+  displayName                     String
+  slug                            String                  @unique
+
+  headline                        String?
+  bio                             String?
+
+  /// ---------- Marketplace ----------
+  marketplaceMode                 MarketplaceMode
+
+  /// ---------- Trust ----------
+  trustScore                      Float                   @default(0)
+
+  verificationBadge               VerificationBadge       @default(NONE)
+
+  verifiedAt                      DateTime?
+
+  /// ---------- Visibility ----------
+  visibility                      VisibilityLevel         @default(PUBLIC)
+
+  isDiscoverable                  Boolean                 @default(true)
+
+  /// ---------- Availability ----------
+  availabilityStatus              AvailabilityStatus      @default(AVAILABLE)
+
+  responseRate                    Float                   @default(0)
+  responseTimeMinutes             Int?
+
+  /// ---------- Metrics ----------
+  totalMatches                    Int                     @default(0)
+  totalProjects                   Int                     @default(0)
+  totalReviews                    Int                     @default(0)
+
+  averageRating                   Float                   @default(0)
+
+  /// ---------- Search ----------
+  searchVector                    Unsupported("tsvector")?
+
+  /// ---------- Metadata ----------
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+  updatedAt                       DateTime                @updatedAt
+  deletedAt                       DateTime?
+
+  /// ---------- Relations ----------
+  workspace                       Workspace               @relation(fields: [workspaceId], references: [id])
+
+  profile                         PersonaProfile?
+
+  skills                          PersonaSkill[]
+  interests                       PersonaInterest[]
+  intents                         PersonaIntent[]
+
+  media                           PersonaMedia[]
+
+  listings                        Listing[]
+
+  reviewsReceived                 PersonaReview[]         @relation("ReviewTarget")
+  reviewsWritten                  PersonaReview[]         @relation("ReviewAuthor")
+
+  bookmarks                       PersonaBookmark[]
+
+  blocksGiven                     PersonaBlock[]          @relation("PersonaBlocker")
+  blocksReceived                  PersonaBlock[]          @relation("PersonaBlocked")
+
+  reportsReceived                 PersonaReport[]         @relation("PersonaReportTarget")
+  reportsMade                     PersonaReport[]         @relation("PersonaReporter")
+
+  @@index([workspaceId])
+  @@index([type])
+  @@index([status])
+  @@index([marketplaceMode])
+  @@index([verificationBadge])
+  @@index([trustScore])
+  @@index([isDiscoverable])
+  @@index([deletedAt])
+}
+
+/// =========================================================
+/// PERSONA PROFILE
+/// =========================================================
+
+model PersonaProfile {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String                  @unique
+
+  /// ---------- Professional ----------
+  yearsExperience                 Int?
+
+  hourlyRateMin                   Decimal?                @db.Decimal(12, 2)
+  hourlyRateMax                   Decimal?                @db.Decimal(12, 2)
+
+  currency                        String?
+
+  /// ---------- Education ----------
+  education                       Json?
+
+  certifications                  Json?
+
+  /// ---------- Social ----------
+  portfolioUrl                    String?
+  linkedinUrl                     String?
+  githubUrl                       String?
+  websiteUrl                      String?
+
+  /// ---------- Location ----------
+  country                         String?
+  region                          String?
+  city                            String?
+
+  timezone                        String?
+
+  /// ---------- Preferences ----------
+  remoteOnly                      Boolean                 @default(false)
+
+  willingToRelocate               Boolean                 @default(false)
+
+  /// ---------- Metadata ----------
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+  updatedAt                       DateTime                @updatedAt
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  @@index([country])
+  @@index([city])
+  @@index([remoteOnly])
+}
+
+/// =========================================================
+/// SKILLS
+/// =========================================================
+
+model Skill {
+  id                              String                  @id @default(uuid())
+
+  name                            String                  @unique
+  slug                            String                  @unique
+
+  category                        String?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  personas                        PersonaSkill[]
+
+  @@index([category])
+}
+
+/// =========================================================
+/// PERSONA SKILLS
+/// =========================================================
+
+model PersonaSkill {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String
+  skillId                         String
+
+  proficiency                     Int?
+
+  yearsExperience                 Int?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  skill                           Skill                   @relation(fields: [skillId], references: [id])
+
+  @@unique([personaId, skillId])
+
+  @@index([personaId])
+  @@index([skillId])
+}
+
+/// =========================================================
+/// INTERESTS
+/// =========================================================
+
+model Interest {
+  id                              String                  @id @default(uuid())
+
+  name                            String                  @unique
+  slug                            String                  @unique
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  personas                        PersonaInterest[]
+}
+
+/// =========================================================
+/// PERSONA INTERESTS
+/// =========================================================
+
+model PersonaInterest {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String
+  interestId                      String
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  interest                        Interest                @relation(fields: [interestId], references: [id])
+
+  @@unique([personaId, interestId])
+
+  @@index([personaId])
+  @@index([interestId])
+}
+
+/// =========================================================
+/// PERSONA INTENTS
+/// =========================================================
+
+model PersonaIntent {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String
+
+  intentKey                       String
+
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([intentKey])
+}
+
+/// =========================================================
+/// PERSONA MEDIA
+/// =========================================================
+
+model PersonaMedia {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String
+
+  storageKey                      String
+
+  mimeType                        String
+
+  fileSize                        Int
+
+  checksum                        String
+
+  isPrimary                       Boolean                 @default(false)
+
+  altText                         String?
+
+  moderationStatus                String?
+
+  malwareScanStatus               String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([isPrimary])
+}
+
+/// =========================================================
+/// LISTINGS
+/// =========================================================
+
+model Listing {
+  id                              String                  @id @default(uuid())
+
+  workspaceId                     String
+  personaId                       String
+
+  type                            ListingType
+  status                          ListingStatus           @default(DRAFT)
+
+  title                           String
+  slug                            String                  @unique
+
+  summary                         String?
+
+  description                     String
+
+  category                        String?
+
+  /// ---------- Pricing ----------
+  priceMin                        Decimal?                @db.Decimal(12, 2)
+  priceMax                        Decimal?                @db.Decimal(12, 2)
+
+  currency                        String?
+
+  /// ---------- Availability ----------
+  availableFrom                   DateTime?
+  availableUntil                  DateTime?
+
+  /// ---------- Visibility ----------
+  visibility                      VisibilityLevel         @default(PUBLIC)
+
+  /// ---------- Metrics ----------
+  totalViews                      Int                     @default(0)
+  totalApplications               Int                     @default(0)
+  totalBookmarks                  Int                     @default(0)
+
+  /// ---------- Search ----------
+  searchVector                    Unsupported("tsvector")?
+
+  /// ---------- Metadata ----------
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+  updatedAt                       DateTime                @updatedAt
+  deletedAt                       DateTime?
+
+  /// ---------- Relations ----------
+  workspace                       Workspace               @relation(fields: [workspaceId], references: [id])
+
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  applications                    ListingApplication[]
+  bookmarks                       ListingBookmark[]
+
+  @@index([workspaceId])
+  @@index([personaId])
+  @@index([type])
+  @@index([status])
+  @@index([visibility])
+  @@index([deletedAt])
+}
+
+/// =========================================================
+/// LISTING APPLICATIONS
+/// =========================================================
+
+model ListingApplication {
+  id                              String                  @id @default(uuid())
+
+  listingId                       String
+  applicantPersonaId              String
+
+  status                          ApplicationStatus       @default(PENDING)
+
+  coverLetter                     String?
+
+  proposedRate                    Decimal?                @db.Decimal(12, 2)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                @default(now())
+  updatedAt                       DateTime                @updatedAt
+
+  /// ---------- Relations ----------
+  listing                         Listing                 @relation(fields: [listingId], references: [id])
+
+  applicantPersona                Persona                 @relation(fields: [applicantPersonaId], references: [id])
+
+  @@unique([listingId, applicantPersonaId])
+
+  @@index([listingId])
+  @@index([applicantPersonaId])
+  @@index([status])
+}
+
+/// =========================================================
+/// BOOKMARKS
+/// =========================================================
+
+model PersonaBookmark {
+  id                              String                  @id @default(uuid())
+
+  sourcePersonaId                 String
+  targetPersonaId                 String
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  sourcePersona                   Persona                 @relation("BookmarkSource", fields: [sourcePersonaId], references: [id])
+
+  targetPersona                   Persona                 @relation("BookmarkTarget", fields: [targetPersonaId], references: [id])
+
+  @@unique([sourcePersonaId, targetPersonaId])
+
+  @@index([sourcePersonaId])
+  @@index([targetPersonaId])
+}
+
+model ListingBookmark {
+  id                              String                  @id @default(uuid())
+
+  personaId                       String
+  listingId                       String
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                 @relation(fields: [personaId], references: [id])
+
+  listing                         Listing                 @relation(fields: [listingId], references: [id])
+
+  @@unique([personaId, listingId])
+
+  @@index([personaId])
+  @@index([listingId])
+}
+
+/// =========================================================
+/// REVIEWS
+/// =========================================================
+
+model PersonaReview {
+  id                              String                  @id @default(uuid())
+
+  authorPersonaId                 String
+  targetPersonaId                 String
+
+  rating                          Int
+
+  title                           String?
+  reviewText                      String?
+
+  isVerifiedInteraction           Boolean                 @default(false)
+
+  moderationStatus                String?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  authorPersona                   Persona                 @relation("ReviewAuthor", fields: [authorPersonaId], references: [id])
+
+  targetPersona                   Persona                 @relation("ReviewTarget", fields: [targetPersonaId], references: [id])
+
+  @@index([authorPersonaId])
+  @@index([targetPersonaId])
+  @@index([rating])
+}
+
+/// =========================================================
+/// BLOCKS
+/// =========================================================
+
+model PersonaBlock {
+  id                              String                  @id @default(uuid())
+
+  blockerPersonaId                String
+  blockedPersonaId                String
+
+  reason                          String?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  blockerPersona                  Persona                 @relation("PersonaBlocker", fields: [blockerPersonaId], references: [id])
+
+  blockedPersona                  Persona                 @relation("PersonaBlocked", fields: [blockedPersonaId], references: [id])
+
+  @@unique([blockerPersonaId, blockedPersonaId])
+
+  @@index([blockerPersonaId])
+  @@index([blockedPersonaId])
+}
+
+/// =========================================================
+/// REPORTS
+/// =========================================================
+
+model PersonaReport {
+  id                              String                  @id @default(uuid())
+
+  reporterPersonaId               String
+  targetPersonaId                 String
+
+  category                        String
+
+  description                     String?
+
+  evidencePayload                 Json?
+
+  moderationStatus                String?
+
+  createdAt                       DateTime                @default(now())
+
+  /// ---------- Relations ----------
+  reporterPersona                 Persona                 @relation("PersonaReporter", fields: [reporterPersonaId], references: [id])
+
+  targetPersona                   Persona                 @relation("PersonaReportTarget", fields: [targetPersonaId], references: [id])
+
+  @@index([reporterPersonaId])
+  @@index([targetPersonaId])
+  @@index([category])
+}

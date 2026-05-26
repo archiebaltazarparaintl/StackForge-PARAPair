@@ -1,0 +1,347 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE AI MATCHING & RECOMMENDATION MODULE
+/// Module: AI / Recommendation / Ranking / Personalization
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum RecommendationType {
+  MATCH
+  LISTING
+  BUSINESS
+  PERSONA
+  CONTENT
+}
+
+enum RecommendationStatus {
+  PENDING
+  ACTIVE
+  DISMISSED
+  ACCEPTED
+  EXPIRED
+}
+
+enum MLModelStatus {
+  TRAINING
+  ACTIVE
+  DEPRECATED
+  DISABLED
+}
+
+enum EmbeddingType {
+  PROFILE
+  MESSAGE
+  LISTING
+  INTEREST
+  SKILL
+}
+
+enum FeedbackType {
+  LIKE
+  DISLIKE
+  HIDE
+  REPORT
+  BOOST
+}
+
+/// =========================================================
+/// RECOMMENDATION CANDIDATES
+/// =========================================================
+
+model RecommendationCandidate {
+  id                              String                        @id @default(uuid())
+
+  personaId                       String
+
+  targetPersonaId                 String?
+
+  targetListingId                 String?
+
+  targetBusinessId                String?
+
+  recommendationType              RecommendationType
+
+  recommendationStatus            RecommendationStatus         @default(PENDING)
+
+  rankingScore                    Float
+
+  compatibilityScore              Float?
+
+  relevanceScore                  Float?
+
+  diversityScore                  Float?
+
+  freshnessScore                  Float?
+
+  generatedByModelVersion         String?
+
+  explanationPayload              Json?
+
+  expiresAt                       DateTime?
+
+  generatedAt                     DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  persona                         Persona                       @relation("RecommendationOwner", fields: [personaId], references: [id])
+
+  targetPersona                   Persona?                      @relation("RecommendationTargetPersona", fields: [targetPersonaId], references: [id])
+
+  targetListing                   Listing?                      @relation(fields: [targetListingId], references: [id])
+
+  targetBusiness                  Workspace?                    @relation(fields: [targetBusinessId], references: [id])
+
+  feedback                        RecommendationFeedback[]
+
+  @@index([personaId])
+  @@index([targetPersonaId])
+  @@index([targetListingId])
+  @@index([recommendationType])
+  @@index([rankingScore])
+  @@index([generatedAt])
+}
+
+/// =========================================================
+/// RECOMMENDATION FEEDBACK
+/// =========================================================
+
+model RecommendationFeedback {
+  id                              String                        @id @default(uuid())
+
+  recommendationCandidateId       String
+
+  personaId                       String
+
+  feedbackType                    FeedbackType
+
+  feedbackScore                   Float?
+
+  feedbackReason                  String?
+
+  createdAt                       DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  recommendationCandidate         RecommendationCandidate       @relation(fields: [recommendationCandidateId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([recommendationCandidateId])
+  @@index([personaId])
+  @@index([feedbackType])
+}
+
+/// =========================================================
+/// EMBEDDINGS
+/// =========================================================
+
+model EmbeddingVector {
+  id                              String                        @id @default(uuid())
+
+  embeddingType                   EmbeddingType
+
+  entityId                        String
+
+  modelVersion                    String
+
+  vectorDimensions                Int
+
+  vectorProvider                  String
+
+  vectorStorageKey                String
+
+  checksum                        String?
+
+  generatedAt                     DateTime                      @default(now())
+
+  metadata                        Json?
+
+  @@unique([embeddingType, entityId, modelVersion])
+
+  @@index([embeddingType])
+  @@index([entityId])
+  @@index([generatedAt])
+}
+
+/// =========================================================
+/// MATCH SCORING
+/// =========================================================
+
+model MatchScore {
+  id                              String                        @id @default(uuid())
+
+  personaAId                      String
+
+  personaBId                      String
+
+  compatibilityScore              Float
+
+  communicationScore              Float?
+
+  intentScore                     Float?
+
+  trustScore                      Float?
+
+  activityScore                   Float?
+
+  behavioralScore                 Float?
+
+  modelVersion                    String
+
+  scoredAt                        DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  personaA                        Persona                       @relation("MatchScorePersonaA", fields: [personaAId], references: [id])
+
+  personaB                        Persona                       @relation("MatchScorePersonaB", fields: [personaBId], references: [id])
+
+  @@unique([personaAId, personaBId])
+
+  @@index([personaAId])
+  @@index([personaBId])
+  @@index([compatibilityScore])
+}
+
+/// =========================================================
+/// SEARCH INDEX DOCUMENTS
+/// =========================================================
+
+model SearchDocument {
+  id                              String                        @id @default(uuid())
+
+  entityType                      String
+
+  entityId                        String
+
+  searchableText                  String
+
+  language                        String?
+
+  searchTokens                    Json?
+
+  rankingSignals                  Json?
+
+  visibilityRules                 Json?
+
+  indexedAt                       DateTime                      @default(now())
+
+  updatedAt                       DateTime                      @updatedAt
+
+  @@unique([entityType, entityId])
+
+  @@index([entityType])
+  @@index([indexedAt])
+}
+
+/// =========================================================
+/// MODEL REGISTRY
+/// =========================================================
+
+model MLModelRegistry {
+  id                              String                        @id @default(uuid())
+
+  modelKey                        String                        @unique
+
+  modelName                       String
+
+  modelType                       String
+
+  version                         String
+
+  status                          MLModelStatus                @default(TRAINING)
+
+  accuracyMetric                  Float?
+
+  precisionMetric                 Float?
+
+  recallMetric                    Float?
+
+  deployedAt                      DateTime?
+
+  deprecatedAt                    DateTime?
+
+  trainingDatasetVersion          String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  @@index([modelType])
+  @@index([status])
+}
+
+/// =========================================================
+/// AI MODERATION SIGNALS
+/// =========================================================
+
+model AiModerationSignal {
+  id                              String                        @id @default(uuid())
+
+  entityType                      String
+
+  entityId                        String
+
+  modelVersion                    String
+
+  toxicityScore                   Float?
+
+  spamScore                       Float?
+
+  fraudScore                      Float?
+
+  nsfwScore                       Float?
+
+  violenceScore                   Float?
+
+  confidenceScore                 Float?
+
+  moderationDecision              String?
+
+  reviewedByHuman                 Boolean                       @default(false)
+
+  reviewedAt                      DateTime?
+
+  createdAt                       DateTime                      @default(now())
+
+  metadata                        Json?
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([moderationDecision])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// PERSONALIZATION PROFILES
+/// =========================================================
+
+model PersonalizationProfile {
+  id                              String                        @id @default(uuid())
+
+  personaId                       String                        @unique
+
+  affinityScores                  Json?
+
+  interactionPatterns             Json?
+
+  activityWindows                 Json?
+
+  communicationPreferences        Json?
+
+  behavioralTraits                Json?
+
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([updatedAt])
+}

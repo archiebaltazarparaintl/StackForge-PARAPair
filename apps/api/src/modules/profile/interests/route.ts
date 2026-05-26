@@ -1,19 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 // app/api/user/interests/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { JwtPayload } from 'jsonwebtoken';
 
 import { verifyAccessToken } from '@repo/db/src/auth';
 import { PrismaClient } from '../../../../../../packages/db/generated/client';
 
 const prisma = new PrismaClient();
-
-interface AuthUser extends JwtPayload {
-  id: string;
-  email?: string;
-}
 
 function slugify(value: string) {
   return value
@@ -26,9 +18,9 @@ function slugify(value: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = (await verifyAccessToken(
+    const user = await verifyAccessToken(
       req.headers.get('authorization')?.replace('Bearer ', ''),
-    )) as AuthUser | null;
+    );
 
     if (!user?.id) {
       return NextResponse.json(

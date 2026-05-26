@@ -1,0 +1,362 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE ANALYTICS & OBSERVABILITY MODULE
+/// Module: Analytics / Telemetry / BI / Monitoring / Events
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum AnalyticsEventType {
+  AUTH
+  MATCHING
+  MESSAGE
+  PAYMENT
+  SUBSCRIPTION
+  PROFILE
+  LISTING
+  MODERATION
+  SYSTEM
+  SECURITY
+}
+
+enum AnalyticsAggregationPeriod {
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ExperimentAssignmentStatus {
+  ACTIVE
+  COMPLETED
+  REMOVED
+}
+
+enum MetricSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+/// =========================================================
+/// RAW EVENT STREAM
+/// =========================================================
+
+model AnalyticsEvent {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String?
+  userId                          String?
+  personaId                       String?
+
+  eventType                       AnalyticsEventType
+
+  eventName                       String
+
+  eventVersion                    String?
+
+  sessionId                       String?
+
+  ipAddress                       String?
+
+  userAgent                       String?
+
+  country                         String?
+  region                          String?
+  city                            String?
+
+  sourcePlatform                  String?
+
+  correlationId                   String?
+
+  properties                      Json?
+
+  occurredAt                      DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace?                      @relation(fields: [workspaceId], references: [id])
+
+  user                            User?                           @relation(fields: [userId], references: [id])
+
+  persona                         Persona?                        @relation(fields: [personaId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([personaId])
+  @@index([eventType])
+  @@index([eventName])
+  @@index([occurredAt])
+}
+
+/// =========================================================
+/// USER SESSIONS
+/// =========================================================
+
+model AnalyticsSession {
+  id                              String                          @id @default(uuid())
+
+  userId                          String?
+  personaId                       String?
+
+  sessionKey                      String                          @unique
+
+  ipAddress                       String?
+
+  userAgent                       String?
+
+  deviceType                      String?
+
+  browser                         String?
+
+  operatingSystem                 String?
+
+  country                         String?
+  region                          String?
+  city                            String?
+
+  startedAt                       DateTime                        @default(now())
+
+  endedAt                         DateTime?
+
+  durationSeconds                 Int?
+
+  bounce                          Boolean                         @default(false)
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User?                           @relation(fields: [userId], references: [id])
+
+  persona                         Persona?                        @relation(fields: [personaId], references: [id])
+
+  @@index([userId])
+  @@index([personaId])
+  @@index([startedAt])
+}
+
+/// =========================================================
+/// FEATURE FLAGS
+/// =========================================================
+
+model FeatureFlag {
+  id                              String                          @id @default(uuid())
+
+  flagKey                         String                          @unique
+
+  name                            String
+
+  description                     String?
+
+  enabled                         Boolean                         @default(false)
+
+  rolloutPercentage               Float                           @default(0)
+
+  targetingRules                  Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime                        @updatedAt
+
+  assignments                     FeatureFlagAssignment[]
+
+  @@index([enabled])
+}
+
+/// =========================================================
+/// FEATURE FLAG ASSIGNMENTS
+/// =========================================================
+
+model FeatureFlagAssignment {
+  id                              String                          @id @default(uuid())
+
+  featureFlagId                   String
+
+  userId                          String?
+  workspaceId                     String?
+  personaId                       String?
+
+  assignedVariant                 String?
+
+  status                          ExperimentAssignmentStatus      @default(ACTIVE)
+
+  assignedAt                      DateTime                        @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  featureFlag                     FeatureFlag                     @relation(fields: [featureFlagId], references: [id])
+
+  user                            User?                           @relation(fields: [userId], references: [id])
+
+  workspace                       Workspace?                      @relation(fields: [workspaceId], references: [id])
+
+  persona                         Persona?                        @relation(fields: [personaId], references: [id])
+
+  @@index([featureFlagId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([personaId])
+}
+
+/// =========================================================
+/// PRODUCT METRICS
+/// =========================================================
+
+model ProductMetricSnapshot {
+  id                              String                          @id @default(uuid())
+
+  metricKey                       String
+
+  aggregationPeriod               AnalyticsAggregationPeriod
+
+  metricDate                      DateTime
+
+  metricValue                     Float
+
+  dimensions                      Json?
+
+  metadata                        Json?
+
+  calculatedAt                    DateTime                        @default(now())
+
+  @@unique([metricKey, aggregationPeriod, metricDate])
+
+  @@index([metricKey])
+  @@index([metricDate])
+}
+
+/// =========================================================
+/// SEARCH ANALYTICS
+/// =========================================================
+
+model SearchAnalytics {
+  id                              String                          @id @default(uuid())
+
+  personaId                       String?
+
+  searchQuery                     String
+
+  filtersPayload                  Json?
+
+  resultCount                     Int?
+
+  clickedResultId                 String?
+
+  searchDurationMs                Int?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona?                        @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// SYSTEM METRICS
+/// =========================================================
+
+model SystemMetric {
+  id                              String                          @id @default(uuid())
+
+  metricKey                       String
+
+  metricValue                     Float
+
+  severity                        MetricSeverity                 @default(INFO)
+
+  sourceService                   String?
+
+  sourceRegion                    String?
+
+  metadata                        Json?
+
+  measuredAt                      DateTime                        @default(now())
+
+  @@index([metricKey])
+  @@index([severity])
+  @@index([measuredAt])
+}
+
+/// =========================================================
+/// ERROR TRACKING
+/// =========================================================
+
+model ErrorLog {
+  id                              String                          @id @default(uuid())
+
+  serviceName                     String
+
+  environment                     String
+
+  errorType                       String
+
+  errorMessage                    String
+
+  stackTrace                      String?
+
+  requestId                       String?
+
+  correlationId                   String?
+
+  endpoint                        String?
+
+  httpMethod                      String?
+
+  responseStatus                  Int?
+
+  userId                          String?
+  workspaceId                     String?
+
+  metadata                        Json?
+
+  occurredAt                      DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  user                            User?                           @relation(fields: [userId], references: [id])
+
+  workspace                       Workspace?                      @relation(fields: [workspaceId], references: [id])
+
+  @@index([serviceName])
+  @@index([errorType])
+  @@index([occurredAt])
+}
+
+/// =========================================================
+/// AUDIT EXPORTS
+/// =========================================================
+
+model AuditExportJob {
+  id                              String                          @id @default(uuid())
+
+  requestedByUserId               String
+
+  exportType                      String
+
+  exportLocation                  String?
+
+  exportFormat                    String?
+
+  status                          String
+
+  startedAt                       DateTime?
+
+  completedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  requestedByUser                 User                            @relation(fields: [requestedByUserId], references: [id])
+
+  @@index([requestedByUserId])
+  @@index([status])
+  @@index([createdAt])
+}

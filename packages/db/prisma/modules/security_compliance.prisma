@@ -1,0 +1,530 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE SECURITY & COMPLIANCE MODULE
+/// Module: Security / Compliance / Fraud / Audit / Privacy
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SecurityEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  MFA_CHALLENGE
+  MFA_SUCCESS
+  MFA_FAILED
+  PASSWORD_CHANGED
+  EMAIL_CHANGED
+  DEVICE_VERIFIED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+  TOKEN_REVOKED
+  API_ABUSE
+  RATE_LIMIT_TRIGGERED
+  SUSPICIOUS_ACTIVITY
+  IMPOSSIBLE_TRAVEL
+  DATA_EXPORT
+  DATA_DELETION
+  PRIVACY_REQUEST
+}
+
+enum DeviceTrustLevel {
+  TRUSTED
+  UNKNOWN
+  SUSPICIOUS
+  BLOCKED
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAIL
+  MARKETING_SMS
+  PROFILING
+  COOKIES
+  DATA_PROCESSING
+}
+
+enum ConsentStatus {
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum PrivacyRequestType {
+  ACCESS
+  EXPORT
+  DELETE
+  RECTIFICATION
+  RESTRICT_PROCESSING
+}
+
+enum PrivacyRequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum ModerationCaseStatus {
+  OPEN
+  INVESTIGATING
+  ACTIONED
+  CLOSED
+}
+
+enum ModerationActionType {
+  WARNING
+  TEMP_SUSPENSION
+  PERMANENT_BAN
+  CONTENT_REMOVAL
+  SHADOW_BAN
+  RESTRICTION
+}
+
+enum FraudCaseStatus {
+  OPEN
+  MONITORING
+  CONFIRMED
+  DISMISSED
+}
+
+/// =========================================================
+/// SECURITY EVENTS
+/// =========================================================
+
+model SecurityEvent {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String?
+  userId                          String?
+  personaId                       String?
+
+  eventType                       SecurityEventType
+
+  riskLevel                       RiskLevel                   @default(LOW)
+
+  ipAddress                       String?
+  userAgent                       String?
+
+  country                         String?
+  region                          String?
+  city                            String?
+
+  deviceFingerprint               String?
+
+  sessionId                       String?
+
+  correlationId                   String?
+
+  metadata                        Json?
+
+  occurredAt                      DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace?                  @relation(fields: [workspaceId], references: [id])
+
+  user                            User?                       @relation(fields: [userId], references: [id])
+
+  persona                         Persona?                    @relation(fields: [personaId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([personaId])
+  @@index([eventType])
+  @@index([riskLevel])
+  @@index([occurredAt])
+}
+
+/// =========================================================
+/// DEVICE REGISTRY
+/// =========================================================
+
+model TrustedDevice {
+  id                              String                      @id @default(uuid())
+
+  userId                          String
+
+  deviceFingerprint               String
+
+  deviceName                      String?
+
+  operatingSystem                 String?
+  browser                         String?
+
+  trustLevel                      DeviceTrustLevel            @default(UNKNOWN)
+
+  lastIpAddress                   String?
+
+  firstSeenAt                     DateTime                    @default(now())
+  lastSeenAt                      DateTime                    @default(now())
+
+  revokedAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, deviceFingerprint])
+
+  @@index([userId])
+  @@index([trustLevel])
+  @@index([lastSeenAt])
+}
+
+/// =========================================================
+/// RATE LIMITING
+/// =========================================================
+
+model RateLimitBucket {
+  id                              String                      @id @default(uuid())
+
+  bucketKey                       String                      @unique
+
+  action                          String
+
+  requestCount                    Int                         @default(0)
+
+  windowStartedAt                 DateTime
+
+  expiresAt                       DateTime
+
+  blockedUntil                    DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@index([action])
+  @@index([expiresAt])
+  @@index([blockedUntil])
+}
+
+/// =========================================================
+/// CONSENT MANAGEMENT
+/// =========================================================
+
+model UserConsent {
+  id                              String                      @id @default(uuid())
+
+  userId                          String
+
+  consentType                     ConsentType
+
+  consentVersion                  String
+
+  status                          ConsentStatus               @default(ACCEPTED)
+
+  acceptedAt                      DateTime                    @default(now())
+
+  revokedAt                       DateTime?
+
+  expiresAt                       DateTime?
+
+  ipAddress                       String?
+  userAgent                       String?
+
+  evidencePayload                 Json?
+
+  /// ---------- Relations ----------
+  user                            User                        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([consentType])
+  @@index([status])
+}
+
+/// =========================================================
+/// PRIVACY REQUESTS
+/// =========================================================
+
+model PrivacyRequest {
+  id                              String                      @id @default(uuid())
+
+  userId                          String
+
+  requestType                     PrivacyRequestType
+
+  status                          PrivacyRequestStatus        @default(PENDING)
+
+  requestedAt                     DateTime                    @default(now())
+
+  processedAt                     DateTime?
+
+  rejectedAt                      DateTime?
+
+  rejectionReason                 String?
+
+  verificationTokenHash           String?
+
+  exportLocation                  String?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([requestType])
+  @@index([status])
+}
+
+/// =========================================================
+/// DATA RETENTION POLICIES
+/// =========================================================
+
+model DataRetentionPolicy {
+  id                              String                      @id @default(uuid())
+
+  entityType                      String
+
+  retentionDays                   Int
+
+  archiveBeforeDeletion           Boolean                     @default(true)
+
+  legalHoldSupported              Boolean                     @default(true)
+
+  policyVersion                   String
+
+  isActive                        Boolean                     @default(true)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@unique([entityType, policyVersion])
+
+  @@index([entityType])
+  @@index([isActive])
+}
+
+/// =========================================================
+/// LEGAL HOLDS
+/// =========================================================
+
+model LegalHold {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String?
+
+  userId                          String?
+
+  reason                          String
+
+  imposedByUserId                 String?
+
+  imposedAt                       DateTime                    @default(now())
+
+  releasedAt                      DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  workspace                       Workspace?                  @relation(fields: [workspaceId], references: [id])
+
+  user                            User?                       @relation(fields: [userId], references: [id])
+
+  imposedByUser                   User?                       @relation("LegalHoldImposer", fields: [imposedByUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([releasedAt])
+}
+
+/// =========================================================
+/// MODERATION CASES
+/// =========================================================
+
+model ModerationCase {
+  id                              String                      @id @default(uuid())
+
+  targetPersonaId                 String?
+
+  targetMessageId                 String?
+
+  targetWorkspaceId               String?
+
+  reportedByPersonaId             String?
+
+  status                          ModerationCaseStatus        @default(OPEN)
+
+  severity                        RiskLevel                   @default(MEDIUM)
+
+  category                        String
+
+  description                     String?
+
+  assignedModeratorId             String?
+
+  resolutionSummary               String?
+
+  openedAt                        DateTime                    @default(now())
+
+  resolvedAt                      DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  targetPersona                   Persona?                    @relation(fields: [targetPersonaId], references: [id])
+
+  targetMessage                   Message?                    @relation(fields: [targetMessageId], references: [id])
+
+  targetWorkspace                 Workspace?                  @relation(fields: [targetWorkspaceId], references: [id])
+
+  reportedByPersona               Persona?                    @relation("ModerationReporter", fields: [reportedByPersonaId], references: [id])
+
+  assignedModerator               User?                       @relation("ModerationAssignee", fields: [assignedModeratorId], references: [id])
+
+  actions                         ModerationAction[]
+
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@index([openedAt])
+}
+
+/// =========================================================
+/// MODERATION ACTIONS
+/// =========================================================
+
+model ModerationAction {
+  id                              String                      @id @default(uuid())
+
+  moderationCaseId                String
+
+  actionType                      ModerationActionType
+
+  performedByUserId               String?
+
+  reason                          String?
+
+  expiresAt                       DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  moderationCase                  ModerationCase              @relation(fields: [moderationCaseId], references: [id])
+
+  performedByUser                 User?                       @relation(fields: [performedByUserId], references: [id])
+
+  @@index([moderationCaseId])
+  @@index([actionType])
+}
+
+/// =========================================================
+/// FRAUD DETECTION
+/// =========================================================
+
+model FraudCase {
+  id                              String                      @id @default(uuid())
+
+  userId                          String?
+  personaId                       String?
+
+  status                          FraudCaseStatus             @default(OPEN)
+
+  riskScore                       Float
+
+  fraudSignals                    Json?
+
+  detectionModelVersion           String?
+
+  assignedInvestigatorId          String?
+
+  resolutionNotes                 String?
+
+  createdAt                       DateTime                    @default(now())
+
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  user                            User?                       @relation(fields: [userId], references: [id])
+
+  persona                         Persona?                    @relation(fields: [personaId], references: [id])
+
+  assignedInvestigator            User?                       @relation("FraudInvestigator", fields: [assignedInvestigatorId], references: [id])
+
+  @@index([status])
+  @@index([riskScore])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// BREACH INVESTIGATIONS
+/// =========================================================
+
+model SecurityIncident {
+  id                              String                      @id @default(uuid())
+
+  incidentKey                     String                      @unique
+
+  title                           String
+
+  severity                        RiskLevel
+
+  detectedAt                      DateTime                    @default(now())
+
+  acknowledgedAt                  DateTime?
+
+  resolvedAt                      DateTime?
+
+  rootCause                       String?
+
+  remediationSummary              String?
+
+  affectedSystems                 Json?
+
+  evidencePayload                 Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@index([severity])
+  @@index([detectedAt])
+}
+
+/// =========================================================
+/// API ACCESS AUDIT
+/// =========================================================
+
+model ApiAccessAudit {
+  id                              String                      @id @default(uuid())
+
+  workspaceApiKeyId               String?
+
+  endpoint                        String
+
+  httpMethod                      String
+
+  responseStatus                  Int
+
+  latencyMs                       Int?
+
+  ipAddress                       String?
+
+  requestId                       String?
+
+  metadata                        Json?
+
+  accessedAt                      DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  workspaceApiKey                 WorkspaceApiKey?            @relation(fields: [workspaceApiKeyId], references: [id])
+
+  @@index([workspaceApiKeyId])
+  @@index([endpoint])
+  @@index([responseStatus])
+  @@index([accessedAt])
+}

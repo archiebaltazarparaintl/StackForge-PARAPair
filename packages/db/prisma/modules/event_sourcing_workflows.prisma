@@ -1,0 +1,409 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE EVENT SOURCING & WORKFLOW MODULE
+/// Module: Event Bus / Domain Events / Saga / Workflow Engine
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum DomainEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+  ARCHIVED
+}
+
+enum WorkflowExecutionStatus {
+  PENDING
+  RUNNING
+  WAITING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum WorkflowStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum SagaExecutionStatus {
+  STARTED
+  PROCESSING
+  COMPENSATING
+  COMPLETED
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  DISPATCHED
+  FAILED
+}
+
+/// =========================================================
+/// DOMAIN EVENTS
+/// =========================================================
+
+model DomainEvent {
+  id                              String                          @id @default(uuid())
+
+  aggregateType                   String
+
+  aggregateId                     String
+
+  eventType                       String
+
+  eventVersion                    String
+
+  eventStatus                     DomainEventStatus             @default(PENDING)
+
+  correlationId                   String?
+
+  causationId                     String?
+
+  actorUserId                     String?
+
+  workspaceId                     String?
+
+  payload                         Json
+
+  metadata                        Json?
+
+  occurredAt                      DateTime                        @default(now())
+
+  publishedAt                     DateTime?
+
+  archivedAt                      DateTime?
+
+  /// ---------- Relations ----------
+  actorUser                       User?                           @relation(fields: [actorUserId], references: [id])
+
+  workspace                       Workspace?                      @relation(fields: [workspaceId], references: [id])
+
+  outboxEntries                   EventOutbox[]
+
+  @@index([aggregateType, aggregateId])
+  @@index([eventType])
+  @@index([eventStatus])
+  @@index([occurredAt])
+  @@index([correlationId])
+}
+
+/// =========================================================
+/// EVENT OUTBOX
+/// =========================================================
+
+model EventOutbox {
+  id                              String                          @id @default(uuid())
+
+  domainEventId                   String
+
+  destination                     String
+
+  topic                           String
+
+  payload                         Json
+
+  status                          OutboxStatus                  @default(PENDING)
+
+  retryCount                      Int                             @default(0)
+
+  nextRetryAt                     DateTime?
+
+  dispatchedAt                    DateTime?
+
+  failedAt                        DateTime?
+
+  lastError                       String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  domainEvent                     DomainEvent                     @relation(fields: [domainEventId], references: [id])
+
+  @@index([domainEventId])
+  @@index([status])
+  @@index([nextRetryAt])
+}
+
+/// =========================================================
+/// WORKFLOW DEFINITIONS
+/// =========================================================
+
+model WorkflowDefinition {
+  id                              String                          @id @default(uuid())
+
+  workflowKey                     String                          @unique
+
+  workflowName                    String
+
+  workflowVersion                 String
+
+  description                     String?
+
+  definitionPayload               Json
+
+  isActive                        Boolean                         @default(true)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime                        @updatedAt
+
+  executions                      WorkflowExecution[]
+
+  @@index([workflowKey])
+  @@index([isActive])
+}
+
+/// =========================================================
+/// WORKFLOW EXECUTIONS
+/// =========================================================
+
+model WorkflowExecution {
+  id                              String                          @id @default(uuid())
+
+  workflowDefinitionId            String
+
+  status                          WorkflowExecutionStatus       @default(PENDING)
+
+  startedByUserId                 String?
+
+  workspaceId                     String?
+
+  correlationId                   String?
+
+  inputPayload                    Json?
+
+  outputPayload                   Json?
+
+  failureReason                   String?
+
+  startedAt                       DateTime                        @default(now())
+
+  completedAt                     DateTime?
+
+  canceledAt                      DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  workflowDefinition              WorkflowDefinition              @relation(fields: [workflowDefinitionId], references: [id])
+
+  startedByUser                   User?                           @relation(fields: [startedByUserId], references: [id])
+
+  workspace                       Workspace?                      @relation(fields: [workspaceId], references: [id])
+
+  steps                           WorkflowStepExecution[]
+
+  @@index([workflowDefinitionId])
+  @@index([status])
+  @@index([startedAt])
+  @@index([correlationId])
+}
+
+/// =========================================================
+/// WORKFLOW STEP EXECUTIONS
+/// =========================================================
+
+model WorkflowStepExecution {
+  id                              String                          @id @default(uuid())
+
+  workflowExecutionId             String
+
+  stepKey                         String
+
+  stepName                        String
+
+  status                          WorkflowStepStatus            @default(PENDING)
+
+  sequenceNumber                  Int
+
+  inputPayload                    Json?
+
+  outputPayload                   Json?
+
+  failureReason                   String?
+
+  startedAt                       DateTime?
+
+  completedAt                     DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  workflowExecution               WorkflowExecution              @relation(fields: [workflowExecutionId], references: [id])
+
+  @@index([workflowExecutionId])
+  @@index([status])
+  @@index([sequenceNumber])
+}
+
+/// =========================================================
+/// SAGA EXECUTIONS
+/// =========================================================
+
+model SagaExecution {
+  id                              String                          @id @default(uuid())
+
+  sagaKey                         String
+
+  status                          SagaExecutionStatus           @default(STARTED)
+
+  correlationId                   String
+
+  aggregateType                   String?
+
+  aggregateId                     String?
+
+  startedAt                       DateTime                        @default(now())
+
+  completedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  compensationStartedAt           DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  steps                           SagaStepExecution[]
+
+  @@index([sagaKey])
+  @@index([status])
+  @@index([correlationId])
+}
+
+/// =========================================================
+/// SAGA STEP EXECUTIONS
+/// =========================================================
+
+model SagaStepExecution {
+  id                              String                          @id @default(uuid())
+
+  sagaExecutionId                 String
+
+  stepKey                         String
+
+  actionType                      String
+
+  sequenceNumber                  Int
+
+  completed                       Boolean                         @default(false)
+
+  compensated                     Boolean                         @default(false)
+
+  completedAt                     DateTime?
+
+  compensatedAt                   DateTime?
+
+  payload                         Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  sagaExecution                   SagaExecution                   @relation(fields: [sagaExecutionId], references: [id])
+
+  @@index([sagaExecutionId])
+  @@index([completed])
+  @@index([compensated])
+}
+
+/// =========================================================
+/// COMMAND BUS
+/// =========================================================
+
+model CommandExecution {
+  id                              String                          @id @default(uuid())
+
+  commandType                     String
+
+  aggregateType                   String?
+
+  aggregateId                     String?
+
+  issuedByUserId                  String?
+
+  correlationId                   String?
+
+  commandPayload                  Json
+
+  resultPayload                   Json?
+
+  success                         Boolean                         @default(true)
+
+  failureReason                   String?
+
+  executedAt                      DateTime                        @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  issuedByUser                    User?                           @relation(fields: [issuedByUserId], references: [id])
+
+  @@index([commandType])
+  @@index([aggregateType, aggregateId])
+  @@index([executedAt])
+  @@index([correlationId])
+}
+
+/// =========================================================
+/// READ MODEL SNAPSHOTS
+/// =========================================================
+
+model AggregateSnapshot {
+  id                              String                          @id @default(uuid())
+
+  aggregateType                   String
+
+  aggregateId                     String
+
+  aggregateVersion                Int
+
+  snapshotPayload                 Json
+
+  createdAt                       DateTime                        @default(now())
+
+  @@unique([aggregateType, aggregateId, aggregateVersion])
+
+  @@index([aggregateType, aggregateId])
+}
+
+/// =========================================================
+/// IDEMPOTENCY KEYS
+/// =========================================================
+
+model IdempotencyKey {
+  id                              String                          @id @default(uuid())
+
+  idempotencyKey                  String                          @unique
+
+  requestHash                     String
+
+  responseHash                    String?
+
+  endpoint                        String
+
+  userId                          String?
+
+  expiresAt                       DateTime
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  user                            User?                           @relation(fields: [userId], references: [id])
+
+  @@index([endpoint])
+  @@index([expiresAt])
+}

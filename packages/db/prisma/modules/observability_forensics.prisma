@@ -1,0 +1,144 @@
+///////////////////////////////////////////////////////////////
+// OBSERVABILITY + FORENSICS MODULE
+// Distributed tracing + audit-grade forensic reconstruction
+///////////////////////////////////////////////////////////////
+
+enum LogSeverity {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  CRITICAL
+}
+
+enum TraceSpanType {
+  HTTP
+  DB
+  CACHE
+  QUEUE
+  AUTH
+  INTERNAL
+  EXTERNAL_API
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ForensicEventType {
+  USER_ACTION
+  SYSTEM_EVENT
+  SECURITY_EVENT
+  FRAUD_EVENT
+  PAYMENT_EVENT
+}
+
+model DistributedTrace {
+  id              String @id @default(cuid())
+
+  traceId         String @unique
+  userId          String?
+
+  rootSpanId      String?
+
+  latencyMs       Int
+
+  success         Boolean @default(true)
+
+  createdAt       DateTime @default(now())
+
+  spans           TraceSpan[]
+
+  @@index([traceId])
+  @@index([userId])
+}
+
+model TraceSpan {
+  id              String @id @default(cuid())
+
+  traceId         String
+  parentSpanId    String?
+
+  spanType        TraceSpanType
+
+  operationName   String
+
+  startTime       DateTime
+  endTime         DateTime?
+
+  durationMs      Int?
+
+  metadata        Json?
+
+  trace           DistributedTrace @relation(fields: [traceId], references: [traceId])
+
+  @@index([traceId])
+  @@index([spanType])
+}
+
+model LogEvent {
+  id              String @id @default(cuid())
+
+  serviceName     String
+
+  severity        LogSeverity
+
+  message         String
+
+  userId          String?
+
+  traceId         String?
+
+  metadata        Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([serviceName, severity])
+  @@index([traceId])
+  @@index([createdAt])
+}
+
+model IncidentReport {
+  id              String @id @default(cuid())
+
+  title           String
+
+  description     String?
+
+  severity        IncidentSeverity
+
+  isResolved      Boolean @default(false)
+
+  assignedTo      String?
+
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+
+  forensicEvents  ForensicEvent[]
+
+  @@index([severity])
+  @@index([isResolved])
+}
+
+model ForensicEvent {
+  id              String @id @default(cuid())
+
+  eventType       ForensicEventType
+
+  userId          String?
+
+  traceId         String?
+
+  payload         Json
+
+  createdAt       DateTime @default(now())
+
+  incidentId      String?
+
+  @@index([eventType])
+  @@index([traceId])
+  @@index([userId])
+}

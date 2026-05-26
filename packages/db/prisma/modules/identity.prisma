@@ -1,0 +1,634 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE IDENTITY & AUTH MODULE
+/// Module: Identity / Authentication / Device Trust
+/// Classification: Enterprise-Grade
+/// Compliance Targets:
+/// - SOC2
+/// - ISO27001
+/// - GDPR
+/// - Philippine DPA
+/// - CCPA
+/// =========================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  LOCKED
+  BANNED
+  DELETED
+}
+
+enum VerificationLevel {
+  NONE
+  EMAIL_VERIFIED
+  PHONE_VERIFIED
+  BASIC_VERIFIED
+  BUSINESS_VERIFIED
+  PREMIUM_TRUSTED
+}
+
+enum MFAType {
+  EMAIL_OTP
+  SMS_OTP
+  TOTP
+  BACKUP_CODE
+}
+
+enum SessionStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+  COMPROMISED
+}
+
+enum DeviceTrustLevel {
+  UNKNOWN
+  LOW
+  TRUSTED
+  HIGH_RISK
+  BLOCKED
+}
+
+enum AuthEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFIED
+  PHONE_VERIFIED
+  MFA_CHALLENGE_SUCCESS
+  MFA_CHALLENGE_FAILED
+  SESSION_REVOKED
+  DEVICE_BLOCKED
+  ACCOUNT_LOCKED
+}
+
+enum TokenType {
+  REFRESH
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  MFA_CHALLENGE
+  ACCOUNT_RECOVERY
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+/// =========================================================
+/// USER CORE IDENTITY
+/// =========================================================
+
+model User {
+  id                      String              @id @default(uuid())
+
+  /// ---------- Core Identity ----------
+  primaryEmail            String              @unique
+  normalizedEmail         String              @unique
+
+  phoneNumber             String?             @unique
+  normalizedPhoneNumber   String?             @unique
+
+  username                String?             @unique
+
+  /// ---------- Authentication ----------
+  passwordHash            String
+
+  passwordVersion         Int                 @default(1)
+
+  /// ---------- Verification ----------
+  accountStatus           AccountStatus       @default(PENDING_VERIFICATION)
+  verificationLevel       VerificationLevel   @default(NONE)
+
+  emailVerifiedAt         DateTime?
+  phoneVerifiedAt         DateTime?
+
+  /// ---------- Security ----------
+  failedLoginAttempts     Int                 @default(0)
+  lockedUntil             DateTime?
+
+  lastLoginAt             DateTime?
+  lastPasswordChangeAt    DateTime?
+
+  /// ---------- Risk ----------
+  trustScore              Float               @default(0)
+
+  /// ---------- Privacy ----------
+  deletedAt               DateTime?
+  anonymizedAt            DateTime?
+
+  /// ---------- Metadata ----------
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  /// ---------- Relations ----------
+  devices                 Device[]
+  sessions                Session[]
+  refreshTokens           RefreshToken[]
+
+  emailVerifications      EmailVerification[]
+  phoneVerifications      PhoneVerification[]
+
+  otpChallenges           OTPChallenge[]
+
+  mfaMethods              MFAMethod[]
+  backupCodes             BackupCode[]
+
+  passwordHistory         PasswordHistory[]
+  recoveryRequests        AccountRecoveryRequest[]
+
+  authEvents              AuthEvent[]
+  securityEvents          SecurityEvent[]
+
+  auditLogs               AuditLog[]
+
+  riskSignals             UserRiskSignal[]
+
+  userConsents            UserConsent[]
+
+  @@index([accountStatus])
+  @@index([verificationLevel])
+  @@index([deletedAt])
+  @@index([trustScore])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// DEVICES
+/// =========================================================
+
+model Device {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  /// ---------- Fingerprinting ----------
+  fingerprintHash         String
+  hardwareHash            String?
+
+  /// ---------- Device Info ----------
+  deviceName              String?
+  deviceType              String?
+
+  osName                  String?
+  osVersion               String?
+
+  browserName             String?
+  browserVersion          String?
+
+  /// ---------- Security ----------
+  trustLevel              DeviceTrustLevel    @default(UNKNOWN)
+
+  isEmulator              Boolean             @default(false)
+  isRooted                Boolean             @default(false)
+  isJailbroken            Boolean             @default(false)
+
+  /// ---------- Metadata ----------
+  firstSeenAt             DateTime            @default(now())
+  lastSeenAt              DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  sessions                Session[]
+  securityEvents          SecurityEvent[]
+
+  @@index([userId])
+  @@index([fingerprintHash])
+  @@index([trustLevel])
+}
+
+/// =========================================================
+/// SESSIONS
+/// =========================================================
+
+model Session {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+  deviceId                String
+
+  status                  SessionStatus       @default(ACTIVE)
+
+  /// ---------- Security ----------
+  ipAddress               String
+  geoCountry              String?
+  geoRegion               String?
+  geoCity                 String?
+
+  userAgent               String
+
+  /// ---------- Session Lifecycle ----------
+  createdAt               DateTime            @default(now())
+  lastUsedAt              DateTime            @default(now())
+
+  expiresAt               DateTime
+  revokedAt               DateTime?
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+  device                  Device              @relation(fields: [deviceId], references: [id])
+
+  refreshTokens           RefreshToken[]
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([lastUsedAt])
+}
+
+/// =========================================================
+/// REFRESH TOKENS
+/// =========================================================
+
+model RefreshToken {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+  sessionId               String
+
+  tokenHash               String              @unique
+  tokenFamily             String
+
+  tokenVersion            Int                 @default(1)
+
+  createdAt               DateTime            @default(now())
+
+  expiresAt               DateTime
+  revokedAt               DateTime?
+
+  replacedByTokenId       String?
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+  session                 Session             @relation(fields: [sessionId], references: [id])
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([tokenFamily])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// EMAIL VERIFICATION
+/// =========================================================
+
+model EmailVerification {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  email                   String
+  tokenHash               String              @unique
+
+  expiresAt               DateTime
+
+  verifiedAt              DateTime?
+
+  attemptCount            Int                 @default(0)
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Metadata ----------
+  requestIp               String?
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// PHONE VERIFICATION
+/// =========================================================
+
+model PhoneVerification {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  phoneNumber             String
+
+  otpHash                 String
+
+  expiresAt               DateTime
+
+  verifiedAt              DateTime?
+
+  attemptCount            Int                 @default(0)
+
+  requestIp               String?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([phoneNumber])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// OTP CHALLENGES
+/// =========================================================
+
+model OTPChallenge {
+  id                      String              @id @default(uuid())
+
+  userId                  String?
+
+  challengeType           MFAType
+
+  target                  String
+
+  otpHash                 String
+
+  expiresAt               DateTime
+
+  consumedAt              DateTime?
+
+  failedAttempts          Int                 @default(0)
+
+  ipAddress               String?
+  userAgent               String?
+
+  riskLevel               RiskLevel           @default(LOW)
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User?               @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([target])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// MFA METHODS
+/// =========================================================
+
+model MFAMethod {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  type                    MFAType
+
+  secretHash              String?
+
+  isPrimary               Boolean             @default(false)
+  isEnabled               Boolean             @default(true)
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+}
+
+/// =========================================================
+/// BACKUP CODES
+/// =========================================================
+
+model BackupCode {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  codeHash                String              @unique
+
+  consumedAt              DateTime?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+/// =========================================================
+/// PASSWORD HISTORY
+/// =========================================================
+
+model PasswordHistory {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  passwordHash            String
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+/// =========================================================
+/// ACCOUNT RECOVERY
+/// =========================================================
+
+model AccountRecoveryRequest {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  recoveryTokenHash       String              @unique
+
+  expiresAt               DateTime
+
+  completedAt             DateTime?
+
+  failedAttempts          Int                 @default(0)
+
+  requestIp               String?
+  requestUserAgent        String?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// AUTH EVENTS
+/// =========================================================
+
+model AuthEvent {
+  id                      String              @id @default(uuid())
+
+  userId                  String?
+
+  eventType               AuthEventType
+
+  success                 Boolean
+
+  ipAddress               String?
+  userAgent               String?
+
+  geoCountry              String?
+  geoRegion               String?
+
+  metadata                Json?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User?               @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// SECURITY EVENTS
+/// =========================================================
+
+model SecurityEvent {
+  id                      String              @id @default(uuid())
+
+  userId                  String?
+  deviceId                String?
+
+  eventName               String
+
+  riskLevel               RiskLevel
+
+  ipAddress               String?
+
+  metadata                Json?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User?               @relation(fields: [userId], references: [id])
+  device                  Device?             @relation(fields: [deviceId], references: [id])
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// USER RISK SIGNALS
+/// =========================================================
+
+model UserRiskSignal {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  signalType              String
+
+  severity                RiskLevel
+
+  confidenceScore         Float
+
+  metadata                Json?
+
+  createdAt               DateTime            @default(now())
+
+  resolvedAt              DateTime?
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// AUDIT LOGS
+/// =========================================================
+
+model AuditLog {
+  id                      String              @id @default(uuid())
+
+  actorUserId             String?
+
+  action                  String
+
+  entityType              String
+  entityId                String
+
+  requestId               String?
+  correlationId           String?
+
+  beforeState             Json?
+  afterState              Json?
+
+  ipAddress               String?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  actorUser               User?               @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// CONSENT TRACKING
+/// =========================================================
+
+model UserConsent {
+  id                      String              @id @default(uuid())
+
+  userId                  String
+
+  policyVersion           String
+
+  consentType             String
+
+  granted                 Boolean
+
+  grantedAt               DateTime?
+  revokedAt               DateTime?
+
+  ipAddress               String?
+
+  metadata                Json?
+
+  createdAt               DateTime            @default(now())
+
+  /// ---------- Relations ----------
+  user                    User                @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([consentType])
+}

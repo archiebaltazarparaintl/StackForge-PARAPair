@@ -1,0 +1,410 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE MATCHING ENGINE MODULE
+/// Module: Recommendation Engine / Swipes / Matching / Feeds
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum SwipeDecision {
+  PASS
+  LIKE
+  SUPER_LIKE
+  PRIORITY_INTEREST
+}
+
+enum MatchStatus {
+  ACTIVE
+  MUTED
+  BLOCKED
+  UNMATCHED
+  ARCHIVED
+}
+
+enum RecommendationSource {
+  ML_MODEL
+  RULE_ENGINE
+  TRENDING
+  GEO_PROXIMITY
+  MANUAL_PROMOTION
+  COLLAB_FILTERING
+  COLD_START
+}
+
+enum FeedGenerationStatus {
+  PENDING
+  READY
+  FAILED
+  EXPIRED
+}
+
+enum MatchInteractionType {
+  PROFILE_VIEW
+  MESSAGE_SENT
+  MESSAGE_REPLY
+  CALL_STARTED
+  CALL_COMPLETED
+  BOOKMARKED
+  APPLICATION_STARTED
+  APPLICATION_SUBMITTED
+}
+
+/// =========================================================
+/// FEED GENERATION JOBS
+/// =========================================================
+
+model FeedGenerationJob {
+  id                              String                    @id @default(uuid())
+
+  personaId                       String
+
+  algorithmVersion                String
+
+  status                          FeedGenerationStatus      @default(PENDING)
+
+  startedAt                       DateTime?
+  completedAt                     DateTime?
+
+  failureReason                   String?
+
+  candidateCount                  Int                       @default(0)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                   @relation(fields: [personaId], references: [id])
+
+  feedSnapshots                   FeedSnapshot[]
+
+  @@index([personaId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// FEED SNAPSHOTS
+/// =========================================================
+
+model FeedSnapshot {
+  id                              String                    @id @default(uuid())
+
+  personaId                       String
+
+  generationJobId                 String?
+
+  algorithmVersion                String
+
+  source                          RecommendationSource
+
+  rankingScore                    Float
+
+  recommendationReason            String?
+
+  expiresAt                       DateTime
+
+  createdAt                       DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                   @relation(fields: [personaId], references: [id])
+
+  generationJob                   FeedGenerationJob?        @relation(fields: [generationJobId], references: [id])
+
+  cards                           FeedCard[]
+
+  @@index([personaId])
+  @@index([algorithmVersion])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// FEED CARDS
+/// =========================================================
+
+model FeedCard {
+  id                              String                    @id @default(uuid())
+
+  feedSnapshotId                  String
+
+  sourcePersonaId                 String
+  targetPersonaId                 String
+
+  rankPosition                    Int
+
+  recommendationSource            RecommendationSource
+
+  totalScore                      Float
+
+  skillScore                      Float?
+  intentScore                     Float?
+  availabilityScore               Float?
+  behaviorScore                   Float?
+  proximityScore                  Float?
+  trustScore                      Float?
+
+  explanationPayload              Json?
+
+  wasViewed                       Boolean                   @default(false)
+  viewedAt                        DateTime?
+
+  wasExpanded                     Boolean                   @default(false)
+  expandedAt                      DateTime?
+
+  createdAt                       DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  feedSnapshot                    FeedSnapshot              @relation(fields: [feedSnapshotId], references: [id])
+
+  sourcePersona                   Persona                   @relation("FeedCardSource", fields: [sourcePersonaId], references: [id])
+
+  targetPersona                   Persona                   @relation("FeedCardTarget", fields: [targetPersonaId], references: [id])
+
+  swipeEvents                     SwipeEvent[]
+
+  @@unique([feedSnapshotId, targetPersonaId])
+
+  @@index([feedSnapshotId])
+  @@index([sourcePersonaId])
+  @@index([targetPersonaId])
+  @@index([rankPosition])
+}
+
+/// =========================================================
+/// MATCH SCORES
+/// =========================================================
+
+model MatchScore {
+  id                              String                    @id @default(uuid())
+
+  sourcePersonaId                 String
+  targetPersonaId                 String
+
+  algorithmVersion                String
+
+  totalScore                      Float
+
+  skillScore                      Float?
+  intentScore                     Float?
+  availabilityScore               Float?
+  proximityScore                  Float?
+  communicationScore              Float?
+  behavioralScore                 Float?
+  trustScore                      Float?
+
+  explainabilityPayload           Json?
+
+  confidenceScore                 Float?
+
+  generatedAt                     DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  sourcePersona                   Persona                   @relation("MatchScoreSource", fields: [sourcePersonaId], references: [id])
+
+  targetPersona                   Persona                   @relation("MatchScoreTarget", fields: [targetPersonaId], references: [id])
+
+  @@unique([sourcePersonaId, targetPersonaId, algorithmVersion])
+
+  @@index([sourcePersonaId])
+  @@index([targetPersonaId])
+  @@index([totalScore])
+  @@index([generatedAt])
+}
+
+/// =========================================================
+/// SWIPE EVENTS
+/// =========================================================
+
+model SwipeEvent {
+  id                              String                    @id @default(uuid())
+
+  sourcePersonaId                 String
+  targetPersonaId                 String
+
+  feedCardId                      String?
+
+  decision                        SwipeDecision
+
+  interactionDurationMs           Int?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  sourcePersona                   Persona                   @relation("SwipeSource", fields: [sourcePersonaId], references: [id])
+
+  targetPersona                   Persona                   @relation("SwipeTarget", fields: [targetPersonaId], references: [id])
+
+  feedCard                        FeedCard?                 @relation(fields: [feedCardId], references: [id])
+
+  generatedMatch                  Match?                    @relation("MatchCreationSwipe")
+
+  @@index([sourcePersonaId])
+  @@index([targetPersonaId])
+  @@index([decision])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// MATCHES
+/// =========================================================
+
+model Match {
+  id                              String                    @id @default(uuid())
+
+  personaAId                      String
+  personaBId                      String
+
+  status                          MatchStatus               @default(ACTIVE)
+
+  matchedAt                       DateTime                  @default(now())
+
+  matchScoreId                    String?
+
+  createdBySwipeId                String?
+
+  lastInteractionAt               DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                  @default(now())
+  updatedAt                       DateTime                  @updatedAt
+
+  /// ---------- Relations ----------
+  personaA                        Persona                   @relation("MatchPersonaA", fields: [personaAId], references: [id])
+
+  personaB                        Persona                   @relation("MatchPersonaB", fields: [personaBId], references: [id])
+
+  matchScore                      MatchScore?               @relation(fields: [matchScoreId], references: [id])
+
+  createdBySwipe                  SwipeEvent?               @relation("MatchCreationSwipe", fields: [createdBySwipeId], references: [id])
+
+  interactions                    MatchInteraction[]
+
+  conversation                    Conversation?
+
+  @@unique([personaAId, personaBId])
+
+  @@index([personaAId])
+  @@index([personaBId])
+  @@index([status])
+  @@index([matchedAt])
+  @@index([lastInteractionAt])
+}
+
+/// =========================================================
+/// MATCH INTERACTIONS
+/// =========================================================
+
+model MatchInteraction {
+  id                              String                    @id @default(uuid())
+
+  matchId                         String
+
+  actorPersonaId                  String
+
+  interactionType                 MatchInteractionType
+
+  metadata                        Json?
+
+  createdAt                       DateTime                  @default(now())
+
+  /// ---------- Relations ----------
+  match                           Match                     @relation(fields: [matchId], references: [id])
+
+  actorPersona                    Persona                   @relation(fields: [actorPersonaId], references: [id])
+
+  @@index([matchId])
+  @@index([actorPersonaId])
+  @@index([interactionType])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// RECOMMENDATION EXPERIMENTS
+/// =========================================================
+
+model RecommendationExperiment {
+  id                              String                    @id @default(uuid())
+
+  experimentKey                   String                    @unique
+
+  algorithmVersion                String
+
+  description                     String?
+
+  trafficPercentage               Float
+
+  isActive                        Boolean                   @default(false)
+
+  startedAt                       DateTime?
+
+  endedAt                         DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                  @default(now())
+
+  @@index([algorithmVersion])
+  @@index([isActive])
+}
+
+/// =========================================================
+/// PERSONA EMBEDDINGS
+/// =========================================================
+
+model PersonaEmbedding {
+  id                              String                    @id @default(uuid())
+
+  personaId                       String                    @unique
+
+  embeddingVersion                String
+
+  embeddingVector                 Bytes
+
+  dimensions                      Int
+
+  generatedAt                     DateTime                  @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  persona                         Persona                   @relation(fields: [personaId], references: [id])
+
+  @@index([embeddingVersion])
+  @@index([generatedAt])
+}
+
+/// =========================================================
+/// DISCOVERY ANALYTICS
+/// =========================================================
+
+model DiscoveryAnalytics {
+  id                              String                    @id @default(uuid())
+
+  personaId                       String
+
+  impressions                     Int                       @default(0)
+  profileViews                    Int                       @default(0)
+
+  likesReceived                   Int                       @default(0)
+  passesReceived                  Int                       @default(0)
+
+  matchConversions                Int                       @default(0)
+
+  responseRate                    Float                     @default(0)
+
+  calculatedAt                    DateTime                  @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  persona                         Persona                   @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([calculatedAt])
+}

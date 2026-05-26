@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Check, Zap, Rocket, ShieldCheck, X } from 'lucide-react';
+import { Crown, Zap, Rocket, ShieldCheck, X } from 'lucide-react';
 
 export default function UpgradeModal({ onClose }: { onClose: () => void }) {
   const features = [

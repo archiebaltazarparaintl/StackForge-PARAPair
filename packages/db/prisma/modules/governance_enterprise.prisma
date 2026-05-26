@@ -1,0 +1,357 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE GOVERNANCE & ORGANIZATION MODULE
+/// Module: Governance / Enterprise Controls / B2B / Admin
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum WorkspaceType {
+  PERSONAL
+  BUSINESS
+  ENTERPRISE
+}
+
+enum WorkspaceStatus {
+  ACTIVE
+  SUSPENDED
+  LOCKED
+  DELETED
+}
+
+enum WorkspaceMemberRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MODERATOR
+  BILLING_ADMIN
+  ANALYST
+  MEMBER
+  READONLY
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  REVOKED
+}
+
+enum AuditActionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ApiEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum FeatureAccessStatus {
+  ENABLED
+  DISABLED
+  LIMITED
+}
+
+/// =========================================================
+/// WORKSPACES
+/// =========================================================
+
+model Workspace {
+  id                              String                          @id @default(uuid())
+
+  workspaceKey                    String                          @unique
+
+  type                            WorkspaceType                  @default(BUSINESS)
+
+  status                          WorkspaceStatus                @default(ACTIVE)
+
+  displayName                     String
+
+  legalBusinessName               String?
+
+  slug                            String                          @unique
+
+  primaryEmail                    String?
+
+  primaryPhone                    String?
+
+  websiteUrl                      String?
+
+  taxId                           String?
+
+  registrationNumber              String?
+
+  country                         String?
+
+  timezone                        String?
+
+  logoAssetId                     String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime                        @updatedAt
+  deletedAt                       DateTime?
+
+  /// ---------- Relations ----------
+  members                         WorkspaceMember[]
+
+  invitations                     WorkspaceInvitation[]
+
+  featureEntitlements             WorkspaceFeatureEntitlement[]
+
+  apiKeys                         WorkspaceApiKey[]
+
+  auditLogs                       WorkspaceAuditLog[]
+
+  complianceDocuments             ComplianceDocument[]
+
+  billingCustomer                 BillingCustomer?
+
+  webhookEndpoints                WebhookEndpoint[]
+
+  moderationCases                 ModerationCase[]
+
+  legalHolds                      LegalHold[]
+
+  analyticsEvents                 AnalyticsEvent[]
+
+  securityEvents                  SecurityEvent[]
+
+  @@index([workspaceKey])
+  @@index([slug])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// =========================================================
+/// WORKSPACE MEMBERS
+/// =========================================================
+
+model WorkspaceMember {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  userId                          String
+
+  role                            WorkspaceMemberRole           @default(MEMBER)
+
+  invitedByUserId                 String?
+
+  joinedAt                        DateTime                       @default(now())
+
+  removedAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  user                            User                           @relation(fields: [userId], references: [id])
+
+  invitedByUser                   User?                          @relation("WorkspaceInviter", fields: [invitedByUserId], references: [id])
+
+  @@unique([workspaceId, userId])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([role])
+}
+
+/// =========================================================
+/// WORKSPACE INVITATIONS
+/// =========================================================
+
+model WorkspaceInvitation {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  invitedEmail                    String
+
+  invitedRole                     WorkspaceMemberRole
+
+  invitationTokenHash             String                          @unique
+
+  status                          InvitationStatus              @default(PENDING)
+
+  expiresAt                       DateTime
+
+  acceptedAt                      DateTime?
+
+  revokedAt                       DateTime?
+
+  invitedByUserId                 String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  invitedByUser                   User?                          @relation(fields: [invitedByUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// WORKSPACE FEATURE ENTITLEMENTS
+/// =========================================================
+
+model WorkspaceFeatureEntitlement {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  featureKey                      String
+
+  status                          FeatureAccessStatus           @default(ENABLED)
+
+  usageLimit                      Int?
+
+  currentUsage                    Int                            @default(0)
+
+  resetAt                         DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, featureKey])
+
+  @@index([workspaceId])
+  @@index([featureKey])
+}
+
+/// =========================================================
+/// ENTERPRISE API KEYS
+/// =========================================================
+
+model WorkspaceApiKey {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  environment                     ApiEnvironment                @default(PRODUCTION)
+
+  keyPrefix                       String
+
+  keyHash                         String                          @unique
+
+  displayName                     String
+
+  scopes                          String[]
+
+  allowedIps                      String[]
+
+  lastUsedAt                      DateTime?
+
+  expiresAt                       DateTime?
+
+  revokedAt                       DateTime?
+
+  createdByUserId                 String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  createdByUser                   User?                          @relation(fields: [createdByUserId], references: [id])
+
+  accessAudits                    ApiAccessAudit[]
+
+  @@index([workspaceId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+/// =========================================================
+/// WORKSPACE AUDIT LOGS
+/// =========================================================
+
+model WorkspaceAuditLog {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  actorUserId                     String?
+
+  action                          String
+
+  entityType                      String
+
+  entityId                        String?
+
+  severity                        AuditActionSeverity           @default(LOW)
+
+  ipAddress                       String?
+
+  userAgent                       String?
+
+  metadata                        Json?
+
+  occurredAt                      DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  actorUser                       User?                           @relation(fields: [actorUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([actorUserId])
+  @@index([action])
+  @@index([occurredAt])
+}
+
+/// =========================================================
+/// COMPLIANCE DOCUMENTS
+/// =========================================================
+
+model ComplianceDocument {
+  id                              String                          @id @default(uuid())
+
+  workspaceId                     String
+
+  documentType                    String
+
+  documentVersion                 String
+
+  documentStorageKey              String
+
+  checksum                        String?
+
+  uploadedByUserId                String?
+
+  effectiveAt                     DateTime?
+
+  expiresAt                       DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                      @relation(fields: [workspaceId], references: [id])
+
+  uploadedByUser                  User?                           @relation(fields: [uploadedByUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([documentType])
+  @@index([expiresAt])
+}

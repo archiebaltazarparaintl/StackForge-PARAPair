@@ -1,0 +1,111 @@
+///////////////////////////////////////////////////////////////
+// DATA WAREHOUSE + CQRS MODULE
+// Event sourcing projection layer for analytics + BI
+///////////////////////////////////////////////////////////////
+
+enum EventStreamType {
+  USER
+  SYSTEM
+  PAYMENT
+  FRAUD
+  SEARCH
+  MESSAGING
+}
+
+enum ProjectionStatus {
+  ACTIVE
+  REBUILDING
+  FAILED
+}
+
+model EventStream {
+  id              String @id @default(cuid())
+
+  streamType      EventStreamType
+
+  aggregateId     String
+
+  eventType       String
+
+  version         Int
+
+  payload         Json
+
+  createdAt       DateTime @default(now())
+
+  @@index([streamType, aggregateId])
+  @@index([createdAt])
+}
+
+model EventSnapshot {
+  id              String @id @default(cuid())
+
+  aggregateId     String
+
+  streamType      EventStreamType
+
+  snapshot        Json
+
+  version         Int
+
+  createdAt       DateTime @default(now())
+
+  @@index([aggregateId])
+}
+
+model CQRSProjection {
+  id              String @id @default(cuid())
+
+  name            String
+
+  sourceStream    EventStreamType
+
+  status          ProjectionStatus @default(ACTIVE)
+
+  lastProcessedVersion Int @default(0)
+
+  updatedAt       DateTime @updatedAt
+
+  @@index([name])
+}
+
+model AnalyticsFactTable {
+  id              String @id @default(cuid())
+
+  eventType       String
+
+  userId          String?
+
+  dimensions      Json
+
+  measures        Json
+
+  eventTime       DateTime
+
+  createdAt       DateTime @default(now())
+
+  @@index([eventType, eventTime])
+  @@index([userId])
+}
+
+model DataPipelineJob {
+  id              String @id @default(cuid())
+
+  name            String
+
+  status          String
+
+  inputSource     String
+
+  outputTarget    String
+
+  lastRunAt       DateTime?
+
+  nextRunAt       DateTime?
+
+  config          Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+}

@@ -1,0 +1,501 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE MESSAGING & REALTIME MODULE
+/// Module: Messaging / Presence / WebSockets / Delivery
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum ConversationType {
+  DIRECT_MATCH
+  GROUP
+  SYSTEM
+  SUPPORT
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  LOCKED
+  DELETED
+}
+
+enum ParticipantRole {
+  MEMBER
+  ADMIN
+  MODERATOR
+  OWNER
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  SYSTEM
+  EVENT
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  DELETED
+}
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  DO_NOT_DISTURB
+  OFFLINE
+}
+
+enum AttachmentScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  BLOCKED
+}
+
+enum RealtimeConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+  TERMINATED
+}
+
+/// =========================================================
+/// CONVERSATIONS
+/// =========================================================
+
+model Conversation {
+  id                              String                        @id @default(uuid())
+
+  type                            ConversationType              @default(DIRECT_MATCH)
+
+  status                          ConversationStatus            @default(ACTIVE)
+
+  matchId                         String?                       @unique
+
+  title                           String?
+
+  lastMessageId                   String?
+  lastMessageAt                   DateTime?
+
+  totalMessages                   Int                           @default(0)
+
+  encryptionVersion               String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+  deletedAt                       DateTime?
+
+  /// ---------- Relations ----------
+  match                           Match?                        @relation(fields: [matchId], references: [id])
+
+  participants                    ConversationParticipant[]
+  messages                        Message[]
+
+  typingIndicators                TypingIndicator[]
+  websocketConnections            WebSocketConnection[]
+
+  @@index([type])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@index([deletedAt])
+}
+
+/// =========================================================
+/// CONVERSATION PARTICIPANTS
+/// =========================================================
+
+model ConversationParticipant {
+  id                              String                        @id @default(uuid())
+
+  conversationId                  String
+  personaId                       String
+
+  role                            ParticipantRole              @default(MEMBER)
+
+  unreadCount                     Int                           @default(0)
+
+  lastReadMessageId               String?
+  lastReadAt                      DateTime?
+
+  notificationsMuted              Boolean                       @default(false)
+
+  isArchived                      Boolean                       @default(false)
+
+  joinedAt                        DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  conversation                    Conversation                  @relation(fields: [conversationId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@unique([conversationId, personaId])
+
+  @@index([conversationId])
+  @@index([personaId])
+  @@index([lastReadAt])
+}
+
+/// =========================================================
+/// MESSAGES
+/// =========================================================
+
+model Message {
+  id                              String                        @id @default(uuid())
+
+  conversationId                  String
+
+  senderPersonaId                 String?
+
+  type                            MessageType                  @default(TEXT)
+
+  status                          MessageStatus                @default(PENDING)
+
+  /// ---------- Content ----------
+  encryptedPayload                Bytes?
+
+  plainTextPreview                String?
+
+  /// ---------- Moderation ----------
+  moderationStatus                String?
+
+  isEdited                        Boolean                       @default(false)
+  editedAt                        DateTime?
+
+  /// ---------- Lifecycle ----------
+  deliveredAt                     DateTime?
+  readAt                          DateTime?
+
+  deletedAt                       DateTime?
+
+  expiresAt                       DateTime?
+
+  /// ---------- Threading ----------
+  replyToMessageId                String?
+
+  /// ---------- Metadata ----------
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  conversation                    Conversation                  @relation(fields: [conversationId], references: [id])
+
+  senderPersona                   Persona?                      @relation(fields: [senderPersonaId], references: [id])
+
+  attachments                     MessageAttachment[]
+
+  receipts                        MessageReceipt[]
+
+  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+
+  replies                         Message[]                     @relation("MessageReplies")
+
+  reactions                       MessageReaction[]
+
+  moderationEvents                MessageModerationEvent[]
+
+  @@index([conversationId])
+  @@index([senderPersonaId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([replyToMessageId])
+}
+
+/// =========================================================
+/// MESSAGE ATTACHMENTS
+/// =========================================================
+
+model MessageAttachment {
+  id                              String                        @id @default(uuid())
+
+  messageId                       String
+
+  storageKey                      String
+
+  originalFileName                String?
+
+  mimeType                        String
+
+  fileSize                        Int
+
+  checksum                        String
+
+  width                           Int?
+  height                          Int?
+
+  durationSeconds                 Int?
+
+  /// ---------- Security ----------
+  malwareScanStatus               AttachmentScanStatus          @default(PENDING)
+
+  moderationStatus                String?
+
+  /// ---------- Metadata ----------
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  message                         Message                       @relation(fields: [messageId], references: [id])
+
+  @@index([messageId])
+  @@index([malwareScanStatus])
+}
+
+/// =========================================================
+/// MESSAGE RECEIPTS
+/// =========================================================
+
+model MessageReceipt {
+  id                              String                        @id @default(uuid())
+
+  messageId                       String
+
+  personaId                       String
+
+  deliveredAt                     DateTime?
+  seenAt                          DateTime?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  message                         Message                       @relation(fields: [messageId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@unique([messageId, personaId])
+
+  @@index([messageId])
+  @@index([personaId])
+  @@index([seenAt])
+}
+
+/// =========================================================
+/// MESSAGE REACTIONS
+/// =========================================================
+
+model MessageReaction {
+  id                              String                        @id @default(uuid())
+
+  messageId                       String
+
+  personaId                       String
+
+  emoji                           String
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  message                         Message                       @relation(fields: [messageId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@unique([messageId, personaId, emoji])
+
+  @@index([messageId])
+  @@index([personaId])
+}
+
+/// =========================================================
+/// MESSAGE MODERATION EVENTS
+/// =========================================================
+
+model MessageModerationEvent {
+  id                              String                        @id @default(uuid())
+
+  messageId                       String
+
+  eventType                       String
+
+  moderationAction                String?
+
+  confidenceScore                 Float?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  message                         Message                       @relation(fields: [messageId], references: [id])
+
+  @@index([messageId])
+  @@index([eventType])
+}
+
+/// =========================================================
+/// PRESENCE
+/// =========================================================
+
+model Presence {
+  id                              String                        @id @default(uuid())
+
+  personaId                       String                        @unique
+
+  status                          PresenceStatus               @default(OFFLINE)
+
+  lastSeenAt                      DateTime                      @default(now())
+
+  isTyping                        Boolean                       @default(false)
+
+  activeConversationId            String?
+
+  metadata                        Json?
+
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([status])
+  @@index([lastSeenAt])
+}
+
+/// =========================================================
+/// TYPING INDICATORS
+/// =========================================================
+
+model TypingIndicator {
+  id                              String                        @id @default(uuid())
+
+  conversationId                  String
+
+  personaId                       String
+
+  startedAt                       DateTime                      @default(now())
+
+  expiresAt                       DateTime
+
+  /// ---------- Relations ----------
+  conversation                    Conversation                  @relation(fields: [conversationId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@unique([conversationId, personaId])
+
+  @@index([conversationId])
+  @@index([personaId])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// WEBSOCKET CONNECTIONS
+/// =========================================================
+
+model WebSocketConnection {
+  id                              String                        @id @default(uuid())
+
+  conversationId                  String?
+
+  personaId                       String
+
+  sessionId                       String
+
+  connectionId                    String                        @unique
+
+  status                          RealtimeConnectionStatus      @default(CONNECTED)
+
+  serverRegion                    String?
+  serverNode                      String?
+
+  connectedAt                     DateTime                      @default(now())
+
+  disconnectedAt                  DateTime?
+
+  lastHeartbeatAt                 DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  conversation                    Conversation?                 @relation(fields: [conversationId], references: [id])
+
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([conversationId])
+  @@index([personaId])
+  @@index([status])
+  @@index([lastHeartbeatAt])
+}
+
+/// =========================================================
+/// PUSH NOTIFICATIONS
+/// =========================================================
+
+model PushNotificationDevice {
+  id                              String                        @id @default(uuid())
+
+  personaId                       String
+
+  deviceTokenHash                 String                        @unique
+
+  platform                        String
+
+  appVersion                      String?
+
+  locale                          String?
+
+  isActive                        Boolean                       @default(true)
+
+  lastUsedAt                      DateTime?
+
+  createdAt                       DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([platform])
+  @@index([isActive])
+}
+
+/// =========================================================
+/// NOTIFICATION QUEUE
+/// =========================================================
+
+model NotificationQueue {
+  id                              String                        @id @default(uuid())
+
+  personaId                       String
+
+  notificationType                String
+
+  title                           String?
+  body                            String?
+
+  payload                         Json?
+
+  deliveryStatus                  String?
+
+  scheduledFor                    DateTime?
+
+  deliveredAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  retryCount                      Int                           @default(0)
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  persona                         Persona                       @relation(fields: [personaId], references: [id])
+
+  @@index([personaId])
+  @@index([deliveryStatus])
+  @@index([scheduledFor])
+}

@@ -1,0 +1,422 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE INFRASTRUCTURE & OPERATIONS MODULE
+/// Module: DevOps / Queues / Jobs / Webhooks / Backups
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum QueueJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRYING
+  DEAD_LETTER
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  RETRYING
+  DISABLED
+}
+
+enum BackupStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  EXPIRED
+}
+
+enum DeploymentEnvironment {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+}
+
+enum ServiceHealthStatus {
+  HEALTHY
+  DEGRADED
+  DOWN
+}
+
+enum ApiKeyScope {
+  READ
+  WRITE
+  ADMIN
+  BILLING
+  ANALYTICS
+}
+
+/// =========================================================
+/// JOB QUEUES
+/// =========================================================
+
+model QueueJob {
+  id                              String                        @id @default(uuid())
+
+  queueName                       String
+
+  jobType                         String
+
+  status                          QueueJobStatus               @default(PENDING)
+
+  priority                        Int                           @default(0)
+
+  payload                         Json
+
+  attempts                        Int                           @default(0)
+
+  maxAttempts                     Int                           @default(5)
+
+  availableAt                     DateTime                      @default(now())
+
+  lockedAt                        DateTime?
+
+  completedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  deadLetteredAt                  DateTime?
+
+  lastError                       String?
+
+  correlationId                   String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  @@index([queueName])
+  @@index([status])
+  @@index([availableAt])
+  @@index([priority])
+}
+
+/// =========================================================
+/// SCHEDULED JOBS
+/// =========================================================
+
+model ScheduledJob {
+  id                              String                        @id @default(uuid())
+
+  jobKey                          String                        @unique
+
+  cronExpression                  String
+
+  jobType                         String
+
+  enabled                         Boolean                       @default(true)
+
+  lastRunAt                       DateTime?
+
+  nextRunAt                       DateTime?
+
+  lastSuccessAt                   DateTime?
+
+  lastFailureAt                   DateTime?
+
+  lastError                       String?
+
+  payload                         Json?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  @@index([enabled])
+  @@index([nextRunAt])
+}
+
+/// =========================================================
+/// WEBHOOK ENDPOINTS
+/// =========================================================
+
+model WebhookEndpoint {
+  id                              String                        @id @default(uuid())
+
+  workspaceId                     String
+
+  endpointUrl                     String
+
+  signingSecretHash               String
+
+  enabled                         Boolean                       @default(true)
+
+  subscribedEvents                Json
+
+  retryPolicy                     Json?
+
+  lastDeliveredAt                 DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                    @relation(fields: [workspaceId], references: [id])
+
+  deliveries                      WebhookDelivery[]
+
+  @@index([workspaceId])
+  @@index([enabled])
+}
+
+/// =========================================================
+/// WEBHOOK DELIVERIES
+/// =========================================================
+
+model WebhookDelivery {
+  id                              String                        @id @default(uuid())
+
+  webhookEndpointId               String
+
+  eventType                       String
+
+  payload                         Json
+
+  responseStatus                  Int?
+
+  responseBody                    String?
+
+  deliveryStatus                  WebhookDeliveryStatus        @default(PENDING)
+
+  attempts                        Int                           @default(0)
+
+  deliveredAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  nextRetryAt                     DateTime?
+
+  lastError                       String?
+
+  requestSignature                String?
+
+  correlationId                   String?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  webhookEndpoint                 WebhookEndpoint              @relation(fields: [webhookEndpointId], references: [id])
+
+  @@index([webhookEndpointId])
+  @@index([deliveryStatus])
+  @@index([eventType])
+  @@index([nextRetryAt])
+}
+
+/// =========================================================
+/// BACKUP REGISTRY
+/// =========================================================
+
+model BackupSnapshot {
+  id                              String                        @id @default(uuid())
+
+  snapshotKey                     String                        @unique
+
+  environment                     DeploymentEnvironment
+
+  backupStatus                    BackupStatus
+
+  storageProvider                 String
+
+  storageLocation                 String
+
+  fileSizeBytes                   BigInt?
+
+  checksum                        String?
+
+  startedAt                       DateTime
+
+  completedAt                     DateTime?
+
+  expiresAt                       DateTime?
+
+  encryptionVersion               String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([environment])
+  @@index([backupStatus])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// DATABASE MIGRATIONS
+/// =========================================================
+
+model SchemaMigrationAudit {
+  id                              String                        @id @default(uuid())
+
+  migrationName                   String
+
+  executedBy                      String?
+
+  environment                     DeploymentEnvironment
+
+  executionTimeMs                 Int?
+
+  success                         Boolean                       @default(true)
+
+  rollbackSupported               Boolean                       @default(false)
+
+  checksum                        String?
+
+  metadata                        Json?
+
+  executedAt                      DateTime                      @default(now())
+
+  @@index([migrationName])
+  @@index([environment])
+  @@index([executedAt])
+}
+
+/// =========================================================
+/// SERVICE REGISTRY
+/// =========================================================
+
+model ServiceRegistry {
+  id                              String                        @id @default(uuid())
+
+  serviceName                     String                        @unique
+
+  environment                     DeploymentEnvironment
+
+  currentVersion                  String
+
+  healthStatus                    ServiceHealthStatus          @default(HEALTHY)
+
+  deployedAt                      DateTime?
+
+  lastHeartbeatAt                 DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  healthChecks                    ServiceHealthCheck[]
+
+  @@index([environment])
+  @@index([healthStatus])
+}
+
+/// =========================================================
+/// SERVICE HEALTH CHECKS
+/// =========================================================
+
+model ServiceHealthCheck {
+  id                              String                        @id @default(uuid())
+
+  serviceRegistryId               String
+
+  cpuUsagePercent                 Float?
+
+  memoryUsagePercent              Float?
+
+  diskUsagePercent                Float?
+
+  requestLatencyMs                Float?
+
+  errorRate                       Float?
+
+  activeConnections               Int?
+
+  metadata                        Json?
+
+  checkedAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  serviceRegistry                 ServiceRegistry              @relation(fields: [serviceRegistryId], references: [id])
+
+  @@index([serviceRegistryId])
+  @@index([checkedAt])
+}
+
+/// =========================================================
+/// API KEYS
+/// =========================================================
+
+model ApiKey {
+  id                              String                        @id @default(uuid())
+
+  workspaceId                     String
+
+  keyPrefix                       String
+
+  keyHash                         String                        @unique
+
+  name                            String
+
+  scopes                          ApiKeyScope[]
+
+  lastUsedAt                      DateTime?
+
+  expiresAt                       DateTime?
+
+  revokedAt                       DateTime?
+
+  createdByUserId                 String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                    @relation(fields: [workspaceId], references: [id])
+
+  createdByUser                   User?                        @relation(fields: [createdByUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+/// =========================================================
+/// CDN ASSETS
+/// =========================================================
+
+model MediaAsset {
+  id                              String                        @id @default(uuid())
+
+  storageKey                      String                        @unique
+
+  bucketName                      String
+
+  cdnUrl                          String?
+
+  mimeType                        String
+
+  fileSizeBytes                   BigInt
+
+  checksum                        String
+
+  encryptionKeyVersion            String?
+
+  uploadedByUserId                String?
+
+  uploadedAt                      DateTime                      @default(now())
+
+  archivedAt                      DateTime?
+
+  deletedAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  uploadedByUser                  User?                         @relation(fields: [uploadedByUserId], references: [id])
+
+  @@index([uploadedByUserId])
+  @@index([uploadedAt])
+  @@index([deletedAt])
+}

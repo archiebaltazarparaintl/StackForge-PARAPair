@@ -1,0 +1,169 @@
+///////////////////////////////////////////////////////////////
+// SEARCH + DISCOVERY ENGINE MODULE
+// High-scale distributed search + ranking + personalization
+///////////////////////////////////////////////////////////////
+
+enum SearchEntityType {
+  USER
+  PROFILE
+  MESSAGE
+  POST
+  MATCH
+  GROUP
+  EVENT
+  CONTENT
+}
+
+enum SearchIndexType {
+  PRIMARY
+  SECONDARY
+  VECTOR
+  GEO
+  FULLTEXT
+}
+
+enum RankingStrategy {
+  RELEVANCE
+  PERSONALIZED
+  POPULARITY
+  RECENCY
+  TRUST_WEIGHTED
+  HYBRID
+}
+
+enum SearchEventType {
+  QUERY
+  CLICK
+  IMPRESSION
+  CONVERSION
+  IGNORE
+}
+
+model SearchDocument {
+  id              String   @id @default(cuid())
+
+  entityType      SearchEntityType
+  entityId        String
+
+  title           String?
+  content         String?
+  tags            String[]
+
+  language        String?
+
+  geoLat          Float?
+  geoLng          Float?
+
+  embeddingVector Unsupported("vector")?
+
+  popularityScore Float    @default(0)
+  trustScore      Float    @default(50)
+
+  isIndexed       Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([popularityScore])
+  @@index([trustScore])
+}
+
+model SearchIndexShard {
+  id              String @id @default(cuid())
+
+  indexType       SearchIndexType
+
+  shardKey        String
+  nodeId          String
+
+  documentCount   Int @default(0)
+
+  isActive        Boolean @default(true)
+
+  updatedAt       DateTime @updatedAt
+
+  @@index([indexType])
+  @@index([shardKey])
+}
+
+model SearchQueryLog {
+  id              String @id @default(cuid())
+
+  userId          String?
+
+  query           String
+  normalizedQuery String
+
+  filters         Json?
+
+  resultCount     Int
+
+  latencyMs       Int
+
+  rankingStrategy RankingStrategy
+
+  createdAt       DateTime @default(now())
+
+  events          SearchEvent[]
+
+  @@index([normalizedQuery])
+  @@index([createdAt])
+}
+
+model SearchEvent {
+  id              String @id @default(cuid())
+
+  queryId         String?
+
+  userId          String?
+
+  entityType      SearchEntityType?
+  entityId        String?
+
+  eventType       SearchEventType
+
+  position        Int?
+
+  weight          Float @default(1)
+
+  createdAt       DateTime @default(now())
+
+  @@index([queryId])
+  @@index([userId])
+  @@index([entityType, entityId])
+}
+
+model PersonalizedSearchProfile {
+  id              String @id @default(cuid())
+
+  userId          String @unique
+
+  interestVector  Unsupported("vector")?
+
+  negativeSignals Json?
+
+  boostFactors    Json?
+
+  lastUpdatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SearchRankingModel {
+  id              String @id @default(cuid())
+
+  name            String
+
+  version         String
+
+  strategy        RankingStrategy
+
+  isActive        Boolean @default(false)
+
+  weights         Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([name, version])
+}

@@ -1,0 +1,315 @@
+/// =========================================================
+/// PARA_PAIR HIGH-SCALE PARTITIONING & THROUGHPUT MODULE
+/// Module: Massive Scale / Partitioning / Feed Scaling
+/// Classification: 1M+ Concurrent User Ready
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum PartitionStrategy {
+  RANGE
+  HASH
+  LIST
+}
+
+enum FeedItemType {
+  MATCH
+  MESSAGE
+  LISTING
+  SYSTEM
+  NOTIFICATION
+  RECOMMENDATION
+}
+
+enum FeedVisibility {
+  PRIVATE
+  CONNECTIONS
+  PUBLIC
+}
+
+enum CacheEntryStatus {
+  ACTIVE
+  EXPIRED
+  INVALIDATED
+}
+
+/// =========================================================
+/// PARTITION REGISTRY
+/// =========================================================
+
+model PartitionRegistry {
+  id                              String                        @id @default(uuid())
+
+  tableName                       String
+
+  partitionName                   String                        @unique
+
+  strategy                        PartitionStrategy
+
+  partitionKey                    String
+
+  boundaryStart                   DateTime?
+
+  boundaryEnd                     DateTime?
+
+  shardIdentifier                 String?
+
+  active                          Boolean                       @default(true)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([tableName])
+  @@index([active])
+}
+
+/// =========================================================
+/// DISTRIBUTED COUNTERS
+/// =========================================================
+
+model DistributedCounter {
+  id                              String                        @id @default(uuid())
+
+  counterKey                      String                        @unique
+
+  counterValue                    BigInt                        @default(0)
+
+  lastAggregatedAt                DateTime?
+
+  metadata                        Json?
+
+  updatedAt                       DateTime                      @updatedAt
+
+  @@index([updatedAt])
+}
+
+/// =========================================================
+/// USER ACTIVITY FEED
+/// =========================================================
+
+model ActivityFeedItem {
+  id                              String                        @id @default(uuid())
+
+  ownerUserId                     String
+
+  actorUserId                     String?
+
+  itemType                        FeedItemType
+
+  visibility                      FeedVisibility               @default(PRIVATE)
+
+  entityType                      String
+
+  entityId                        String
+
+  rankingScore                    Float?
+
+  payload                         Json?
+
+  expiresAt                       DateTime?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  ownerUser                       User                          @relation("FeedOwner", fields: [ownerUserId], references: [id])
+
+  actorUser                       User?                         @relation("FeedActor", fields: [actorUserId], references: [id])
+
+  @@index([ownerUserId, createdAt])
+  @@index([itemType])
+  @@index([rankingScore])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// HOT CACHE REGISTRY
+/// =========================================================
+
+model CacheEntry {
+  id                              String                        @id @default(uuid())
+
+  cacheKey                        String                        @unique
+
+  cacheNamespace                  String
+
+  cacheStatus                     CacheEntryStatus             @default(ACTIVE)
+
+  payload                         Json
+
+  ttlSeconds                      Int
+
+  invalidatedAt                   DateTime?
+
+  expiresAt                       DateTime
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([cacheNamespace])
+  @@index([expiresAt])
+  @@index([cacheStatus])
+}
+
+/// =========================================================
+/// RATE LIMIT BUCKETS
+/// =========================================================
+
+model RateLimitBucket {
+  id                              String                        @id @default(uuid())
+
+  bucketKey                       String                        @unique
+
+  requestCount                    Int                           @default(0)
+
+  windowStartedAt                 DateTime
+
+  expiresAt                       DateTime
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// WEBSOCKET CONNECTION REGISTRY
+/// =========================================================
+
+model RealtimeConnection {
+  id                              String                        @id @default(uuid())
+
+  userId                          String?
+
+  connectionId                    String                        @unique
+
+  region                          String?
+
+  nodeIdentifier                  String?
+
+  ipAddress                       String?
+
+  connectedAt                     DateTime                      @default(now())
+
+  disconnectedAt                  DateTime?
+
+  lastHeartbeatAt                 DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User?                         @relation(fields: [userId], references: [id])
+
+  subscriptions                   RealtimeSubscription[]
+
+  @@index([userId])
+  @@index([connectedAt])
+  @@index([lastHeartbeatAt])
+}
+
+/// =========================================================
+/// REALTIME SUBSCRIPTIONS
+/// =========================================================
+
+model RealtimeSubscription {
+  id                              String                        @id @default(uuid())
+
+  realtimeConnectionId            String
+
+  channelName                     String
+
+  subscribedAt                    DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  realtimeConnection              RealtimeConnection            @relation(fields: [realtimeConnectionId], references: [id])
+
+  @@unique([realtimeConnectionId, channelName])
+
+  @@index([channelName])
+}
+
+/// =========================================================
+/// MESSAGE DELIVERY QUEUE
+/// =========================================================
+
+model MessageDeliveryQueue {
+  id                              String                        @id @default(uuid())
+
+  messageId                       String
+
+  recipientUserId                 String
+
+  deliveryRegion                  String?
+
+  delivered                       Boolean                       @default(false)
+
+  deliveredAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  retryCount                      Int                           @default(0)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  message                         Message                       @relation(fields: [messageId], references: [id])
+
+  recipientUser                   User                          @relation(fields: [recipientUserId], references: [id])
+
+  @@index([recipientUserId, delivered])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// SEARCH QUERY CACHE
+/// =========================================================
+
+model SearchQueryCache {
+  id                              String                        @id @default(uuid())
+
+  queryHash                       String                        @unique
+
+  queryText                       String
+
+  filtersHash                     String?
+
+  resultPayload                   Json
+
+  hitCount                        Int                           @default(0)
+
+  expiresAt                       DateTime
+
+  createdAt                       DateTime                      @default(now())
+
+  @@index([expiresAt])
+  @@index([hitCount])
+}
+
+/// =========================================================
+/// THROUGHPUT MONITORING
+/// =========================================================
+
+model ThroughputMetric {
+  id                              String                        @id @default(uuid())
+
+  metricKey                       String
+
+  metricValue                     Float
+
+  sourceRegion                    String?
+
+  aggregationWindow               String
+
+  recordedAt                      DateTime                      @default(now())
+
+  metadata                        Json?
+
+  @@index([metricKey])
+  @@index([recordedAt])
+}

@@ -1,0 +1,440 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE FRAUD, RISK & ABUSE MODULE
+/// Module: Anti-Abuse / Fraud Detection / Trust Systems
+/// Classification: High-Abuse Internet Scale
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FraudCaseStatus {
+  OPEN
+  INVESTIGATING
+  CONFIRMED
+  FALSE_POSITIVE
+  RESOLVED
+}
+
+enum DeviceTrustLevel {
+  TRUSTED
+  UNKNOWN
+  SUSPICIOUS
+  BLOCKED
+}
+
+enum ReputationStatus {
+  GOOD
+  WATCHLIST
+  RESTRICTED
+  BANNED
+}
+
+enum AbuseActionType {
+  WARNING
+  SHADOW_BAN
+  TEMP_SUSPENSION
+  PERMANENT_BAN
+  RATE_LIMIT
+  CAPTCHA_REQUIRED
+  CONTENT_RESTRICTED
+}
+
+enum FingerprintType {
+  DEVICE
+  BROWSER
+  NETWORK
+  BEHAVIORAL
+}
+
+enum ThreatSignalType {
+  VPN
+  TOR
+  PROXY
+  BOT
+  SPAM
+  MULTI_ACCOUNT
+  DEVICE_FARM
+  GEO_ANOMALY
+  IMPOSSIBLE_TRAVEL
+  ACCOUNT_TAKEOVER
+}
+
+/// =========================================================
+/// DEVICE FINGERPRINTS
+/// =========================================================
+
+model DeviceFingerprint {
+  id                              String                        @id @default(uuid())
+
+  fingerprintHash                 String                        @unique
+
+  fingerprintType                 FingerprintType
+
+  deviceTrustLevel                DeviceTrustLevel             @default(UNKNOWN)
+
+  operatingSystem                 String?
+
+  browser                         String?
+
+  browserVersion                  String?
+
+  deviceModel                     String?
+
+  screenResolution                String?
+
+  language                        String?
+
+  timezone                        String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  users                           UserDeviceFingerprint[]
+
+  threatSignals                   ThreatSignal[]
+
+  @@index([deviceTrustLevel])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// USER DEVICE ASSOCIATIONS
+/// =========================================================
+
+model UserDeviceFingerprint {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  deviceFingerprintId             String
+
+  firstSeenAt                     DateTime                      @default(now())
+
+  lastSeenAt                      DateTime                      @default(now())
+
+  trusted                         Boolean                       @default(false)
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  deviceFingerprint               DeviceFingerprint             @relation(fields: [deviceFingerprintId], references: [id])
+
+  @@unique([userId, deviceFingerprintId])
+
+  @@index([userId])
+  @@index([deviceFingerprintId])
+}
+
+/// =========================================================
+/// USER REPUTATION
+/// =========================================================
+
+model UserReputation {
+  id                              String                        @id @default(uuid())
+
+  userId                          String                        @unique
+
+  reputationScore                 Float                         @default(100)
+
+  trustScore                      Float                         @default(100)
+
+  fraudScore                      Float                         @default(0)
+
+  spamScore                       Float                         @default(0)
+
+  abuseReportsCount               Int                           @default(0)
+
+  confirmedViolations             Int                           @default(0)
+
+  successfulMatches               Int                           @default(0)
+
+  failedPayments                  Int                           @default(0)
+
+  reputationStatus                ReputationStatus             @default(GOOD)
+
+  lastCalculatedAt                DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+  updatedAt                       DateTime                      @updatedAt
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([reputationStatus])
+  @@index([reputationScore])
+}
+
+/// =========================================================
+/// THREAT SIGNALS
+/// =========================================================
+
+model ThreatSignal {
+  id                              String                        @id @default(uuid())
+
+  userId                          String?
+
+  deviceFingerprintId             String?
+
+  signalType                      ThreatSignalType
+
+  riskLevel                       RiskLevel                     @default(MEDIUM)
+
+  confidenceScore                 Float?
+
+  ipAddress                       String?
+
+  country                         String?
+
+  city                            String?
+
+  autonomousSystemNumber          String?
+
+  provider                        String?
+
+  detectedAt                      DateTime                      @default(now())
+
+  expiresAt                       DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User?                         @relation(fields: [userId], references: [id])
+
+  deviceFingerprint               DeviceFingerprint?            @relation(fields: [deviceFingerprintId], references: [id])
+
+  @@index([userId])
+  @@index([signalType])
+  @@index([riskLevel])
+  @@index([detectedAt])
+}
+
+/// =========================================================
+/// FRAUD CASES
+/// =========================================================
+
+model FraudInvestigationCase {
+  id                              String                        @id @default(uuid())
+
+  caseReference                   String                        @unique
+
+  userId                          String?
+
+  assignedModeratorId             String?
+
+  status                          FraudCaseStatus              @default(OPEN)
+
+  riskLevel                       RiskLevel                     @default(MEDIUM)
+
+  detectionSource                 String?
+
+  incidentSummary                 String?
+
+  evidencePayload                 Json?
+
+  internalNotes                   Json?
+
+  openedAt                        DateTime                      @default(now())
+
+  resolvedAt                      DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User?                         @relation(fields: [userId], references: [id])
+
+  assignedModerator               User?                         @relation("FraudModerator", fields: [assignedModeratorId], references: [id])
+
+  actions                         AbuseEnforcementAction[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([riskLevel])
+}
+
+/// =========================================================
+/// ABUSE ENFORCEMENT ACTIONS
+/// =========================================================
+
+model AbuseEnforcementAction {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  fraudInvestigationCaseId        String?
+
+  actionType                      AbuseActionType
+
+  reason                          String?
+
+  automated                       Boolean                       @default(false)
+
+  expiresAt                       DateTime?
+
+  liftedAt                        DateTime?
+
+  createdByUserId                 String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  user                            User                          @relation("AbuseTargetUser", fields: [userId], references: [id])
+
+  fraudInvestigationCase          FraudInvestigationCase?       @relation(fields: [fraudInvestigationCaseId], references: [id])
+
+  createdByUser                   User?                         @relation("AbuseActionCreator", fields: [createdByUserId], references: [id])
+
+  @@index([userId])
+  @@index([actionType])
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// MULTI-ACCOUNT DETECTION
+/// =========================================================
+
+model LinkedAccountCluster {
+  id                              String                        @id @default(uuid())
+
+  clusterKey                      String                        @unique
+
+  riskLevel                       RiskLevel                     @default(MEDIUM)
+
+  detectionReason                 String?
+
+  confidenceScore                 Float?
+
+  createdAt                       DateTime                      @default(now())
+
+  metadata                        Json?
+
+  accounts                        LinkedAccount[]
+
+  @@index([riskLevel])
+}
+
+/// =========================================================
+/// LINKED ACCOUNTS
+/// =========================================================
+
+model LinkedAccount {
+  id                              String                        @id @default(uuid())
+
+  linkedAccountClusterId          String
+
+  userId                          String
+
+  linkageReason                   String?
+
+  confidenceScore                 Float?
+
+  createdAt                       DateTime                      @default(now())
+
+  /// ---------- Relations ----------
+  linkedAccountCluster            LinkedAccountCluster          @relation(fields: [linkedAccountClusterId], references: [id])
+
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@unique([linkedAccountClusterId, userId])
+
+  @@index([userId])
+}
+
+/// =========================================================
+/// VELOCITY TRACKING
+/// =========================================================
+
+model UserVelocityMetric {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  metricKey                       String
+
+  metricValue                     Float
+
+  aggregationWindow               String
+
+  calculatedAt                    DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([metricKey])
+  @@index([calculatedAt])
+}
+
+/// =========================================================
+/// SHADOW BAN REGISTRY
+/// =========================================================
+
+model ShadowBan {
+  id                              String                        @id @default(uuid())
+
+  userId                          String                        @unique
+
+  reason                          String?
+
+  hiddenFromDiscovery             Boolean                       @default(true)
+
+  hiddenFromMessaging             Boolean                       @default(false)
+
+  hiddenFromRecommendations       Boolean                       @default(true)
+
+  imposedAt                       DateTime                      @default(now())
+
+  expiresAt                       DateTime?
+
+  liftedAt                        DateTime?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([expiresAt])
+}
+
+/// =========================================================
+/// RISK SCORING HISTORY
+/// =========================================================
+
+model RiskScoreHistory {
+  id                              String                        @id @default(uuid())
+
+  userId                          String
+
+  previousRiskScore               Float?
+
+  newRiskScore                    Float
+
+  riskFactors                     Json?
+
+  calculatedAt                    DateTime                      @default(now())
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  user                            User                          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([calculatedAt])
+}

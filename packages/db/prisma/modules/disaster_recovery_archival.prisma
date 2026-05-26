@@ -1,0 +1,380 @@
+/// =========================================================
+/// PARA_PAIR ENTERPRISE DISASTER RECOVERY & ARCHIVAL MODULE
+/// Module: DR / Archival / Retention / Recovery / Cold Storage
+/// Classification: Enterprise-Grade
+/// =========================================================
+
+/// =========================================================
+/// ENUMS
+/// =========================================================
+
+enum ArchiveStatus {
+  PENDING
+  ARCHIVED
+  RESTORED
+  PURGED
+}
+
+enum RecoveryJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum BackupType {
+  FULL
+  INCREMENTAL
+  DIFFERENTIAL
+}
+
+enum StorageTier {
+  HOT
+  WARM
+  COLD
+  GLACIER
+}
+
+enum RecoveryPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+/// =========================================================
+/// ARCHIVE REGISTRY
+/// =========================================================
+
+model ArchiveRecord {
+  id                              String                          @id @default(uuid())
+
+  entityType                      String
+
+  entityId                        String
+
+  archiveStatus                   ArchiveStatus                  @default(PENDING)
+
+  dataClassification              DataClassification             @default(CONFIDENTIAL)
+
+  archiveReason                   String?
+
+  archivedPayload                 Json
+
+  archiveChecksum                 String?
+
+  storageTier                     StorageTier                    @default(COLD)
+
+  storageLocation                 String
+
+  retentionUntil                  DateTime?
+
+  archivedAt                      DateTime?
+
+  restoredAt                      DateTime?
+
+  purgedAt                        DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  @@unique([entityType, entityId])
+
+  @@index([archiveStatus])
+  @@index([storageTier])
+  @@index([retentionUntil])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// DATABASE BACKUPS
+/// =========================================================
+
+model DatabaseBackup {
+  id                              String                          @id @default(uuid())
+
+  backupKey                       String                          @unique
+
+  backupType                      BackupType
+
+  environment                     DeploymentEnvironment
+
+  storageTier                     StorageTier                    @default(GLACIER)
+
+  encrypted                       Boolean                         @default(true)
+
+  encryptionVersion               String?
+
+  storageProvider                 String
+
+  storageLocation                 String
+
+  checksum                        String?
+
+  fileSizeBytes                   BigInt?
+
+  startedAt                       DateTime
+
+  completedAt                     DateTime?
+
+  expiresAt                       DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  recoveryJobs                    RecoveryJob[]
+
+  @@index([backupType])
+  @@index([environment])
+  @@index([startedAt])
+}
+
+/// =========================================================
+/// RECOVERY JOBS
+/// =========================================================
+
+model RecoveryJob {
+  id                              String                          @id @default(uuid())
+
+  databaseBackupId                String
+
+  requestedByUserId               String?
+
+  status                          RecoveryJobStatus             @default(PENDING)
+
+  priority                        RecoveryPriority              @default(NORMAL)
+
+  targetEnvironment               DeploymentEnvironment
+
+  restorePoint                    DateTime?
+
+  startedAt                       DateTime?
+
+  completedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  databaseBackup                  DatabaseBackup                 @relation(fields: [databaseBackupId], references: [id])
+
+  requestedByUser                 User?                           @relation(fields: [requestedByUserId], references: [id])
+
+  @@index([databaseBackupId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+/// =========================================================
+/// DATA RETENTION EXECUTIONS
+/// =========================================================
+
+model RetentionExecution {
+  id                              String                          @id @default(uuid())
+
+  retentionPolicyId               String
+
+  entityType                      String
+
+  processedRecords                Int                             @default(0)
+
+  archivedRecords                 Int                             @default(0)
+
+  purgedRecords                   Int                             @default(0)
+
+  failedRecords                   Int                             @default(0)
+
+  startedAt                       DateTime                        @default(now())
+
+  completedAt                     DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  /// ---------- Relations ----------
+  retentionPolicy                 DataRetentionPolicy            @relation(fields: [retentionPolicyId], references: [id])
+
+  @@index([retentionPolicyId])
+  @@index([startedAt])
+}
+
+/// =========================================================
+/// CROSS-REGION REPLICATION
+/// =========================================================
+
+model CrossRegionReplication {
+  id                              String                          @id @default(uuid())
+
+  sourceRegion                    String
+
+  targetRegion                    String
+
+  replicationLagMs                Int?
+
+  replicationHealthy              Boolean                         @default(true)
+
+  lastSyncedAt                    DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime                        @updatedAt
+
+  @@unique([sourceRegion, targetRegion])
+
+  @@index([replicationHealthy])
+  @@index([lastSyncedAt])
+}
+
+/// =========================================================
+/// BUSINESS CONTINUITY PLANS
+/// =========================================================
+
+model BusinessContinuityPlan {
+  id                              String                          @id @default(uuid())
+
+  planKey                         String                          @unique
+
+  planName                        String
+
+  description                     String?
+
+  rtoMinutes                      Int
+
+  rpoMinutes                      Int
+
+  escalationMatrix                Json?
+
+  communicationPlan               Json?
+
+  recoveryProcedures              Json?
+
+  testFrequencyDays               Int?
+
+  lastTestedAt                    DateTime?
+
+  nextTestAt                      DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+  updatedAt                       DateTime                        @updatedAt
+
+  @@index([nextTestAt])
+}
+
+/// =========================================================
+/// DISASTER RECOVERY TESTS
+/// =========================================================
+
+model DisasterRecoveryTest {
+  id                              String                          @id @default(uuid())
+
+  businessContinuityPlanId        String
+
+  executedByUserId                String?
+
+  testScenario                    String
+
+  success                         Boolean                         @default(true)
+
+  findings                        String?
+
+  remediationItems                Json?
+
+  startedAt                       DateTime
+
+  completedAt                     DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  /// ---------- Relations ----------
+  businessContinuityPlan          BusinessContinuityPlan          @relation(fields: [businessContinuityPlanId], references: [id])
+
+  executedByUser                  User?                           @relation(fields: [executedByUserId], references: [id])
+
+  @@index([businessContinuityPlanId])
+  @@index([success])
+  @@index([startedAt])
+}
+
+/// =========================================================
+/// FAILOVER EVENTS
+/// =========================================================
+
+model FailoverEvent {
+  id                              String                          @id @default(uuid())
+
+  sourceRegion                    String
+
+  targetRegion                    String
+
+  triggerReason                   String
+
+  initiatedBy                     String?
+
+  successful                      Boolean                         @default(true)
+
+  downtimeSeconds                 Int?
+
+  startedAt                       DateTime
+
+  completedAt                     DateTime?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  @@index([sourceRegion])
+  @@index([targetRegion])
+  @@index([startedAt])
+}
+
+/// =========================================================
+/// EVIDENCE VAULT
+/// =========================================================
+
+model ComplianceEvidenceVault {
+  id                              String                          @id @default(uuid())
+
+  evidenceKey                     String                          @unique
+
+  evidenceType                    String
+
+  storageLocation                 String
+
+  checksum                        String
+
+  collectedAt                     DateTime                        @default(now())
+
+  expiresAt                       DateTime?
+
+  legalHold                       Boolean                         @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                        @default(now())
+
+  @@index([evidenceType])
+  @@index([legalHold])
+  @@index([expiresAt])
+}
