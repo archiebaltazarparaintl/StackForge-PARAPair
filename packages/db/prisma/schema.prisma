@@ -1,11 +1,13 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 
@@ -722,7 +724,117 @@ model AuditExportJob {
   @@index([createdAt])
 }
 
+///////////////////////////////////////////////////////////////
+// DATA WAREHOUSE + CQRS MODULE
+// Event sourcing projection layer for analytics + BI
+///////////////////////////////////////////////////////////////
 
+enum EventStreamType {
+  USER
+  SYSTEM
+  PAYMENT
+  FRAUD
+  SEARCH
+  MESSAGING
+}
+
+enum ProjectionStatus {
+  ACTIVE
+  REBUILDING
+  FAILED
+}
+
+model EventStream {
+  id              String @id @default(cuid())
+
+  streamType      EventStreamType
+
+  aggregateId     String
+
+  eventType       String
+
+  version         Int
+
+  payload         Json
+
+  createdAt       DateTime @default(now())
+
+  @@index([streamType, aggregateId])
+  @@index([createdAt])
+}
+
+model EventSnapshot {
+  id              String @id @default(cuid())
+
+  aggregateId     String
+
+  streamType      EventStreamType
+
+  snapshot        Json
+
+  version         Int
+
+  createdAt       DateTime @default(now())
+
+  @@index([aggregateId])
+}
+
+model CQRSProjection {
+  id              String @id @default(cuid())
+
+  name            String
+
+  sourceStream    EventStreamType
+
+  status          ProjectionStatus @default(ACTIVE)
+
+  lastProcessedVersion Int @default(0)
+
+  updatedAt       DateTime @updatedAt
+
+  @@index([name])
+}
+
+model AnalyticsFactTable {
+  id              String @id @default(cuid())
+
+  eventType       String
+
+  userId          String?
+
+  dimensions      Json
+
+  measures        Json
+
+  eventTime       DateTime
+
+  createdAt       DateTime @default(now())
+
+  @@index([eventType, eventTime])
+  @@index([userId])
+}
+
+model DataPipelineJob {
+  id              String @id @default(cuid())
+
+  name            String
+
+  status          String
+
+  inputSource     String
+
+  outputTarget    String
+
+  lastRunAt       DateTime?
+
+  nextRunAt       DateTime?
+
+  config          Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+}
 
 /// =========================================================
 /// PARA_PAIR ENTERPRISE DISASTER RECOVERY & ARCHIVAL MODULE
@@ -1543,29 +1655,6 @@ enum AssignmentStrategy {
   WEIGHTED
 }
 
-model FeatureFlag {
-  id              String @id @default(cuid())
-
-  key             String @unique
-  name            String
-
-  type            FlagType
-
-  isEnabled       Boolean @default(false)
-
-  defaultValue    Json?
-
-  rolloutPercent  Float @default(0)
-
-  targetRules     Json?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  assignments     FlagAssignment[]
-
-  @@index([key])
-}
 
 model FlagAssignment {
   id              String @id @default(cuid())
@@ -2788,14 +2877,9 @@ model ThroughputMetric {
 /// - CCPA
 /// =========================================================
 
-generator client {
-  provider = "prisma-client-js"
-}
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+
+
 
 /// =========================================================
 /// ENUMS
@@ -2833,13 +2917,6 @@ enum SessionStatus {
   COMPROMISED
 }
 
-enum DeviceTrustLevel {
-  UNKNOWN
-  LOW
-  TRUSTED
-  HIGH_RISK
-  BLOCKED
-}
 
 enum AuthEventType {
   LOGIN_SUCCESS
@@ -2863,12 +2940,6 @@ enum TokenType {
   ACCOUNT_RECOVERY
 }
 
-enum RiskLevel {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
 
 /// =========================================================
 /// USER CORE IDENTITY
@@ -4483,42 +4554,6 @@ model FeedCard {
 /// MATCH SCORES
 /// =========================================================
 
-model MatchScore {
-  id                              String                    @id @default(uuid())
-
-  sourcePersonaId                 String
-  targetPersonaId                 String
-
-  algorithmVersion                String
-
-  totalScore                      Float
-
-  skillScore                      Float?
-  intentScore                     Float?
-  availabilityScore               Float?
-  proximityScore                  Float?
-  communicationScore              Float?
-  behavioralScore                 Float?
-  trustScore                      Float?
-
-  explainabilityPayload           Json?
-
-  confidenceScore                 Float?
-
-  generatedAt                     DateTime                  @default(now())
-
-  /// ---------- Relations ----------
-  sourcePersona                   Persona                   @relation("MatchScoreSource", fields: [sourcePersonaId], references: [id])
-
-  targetPersona                   Persona                   @relation("MatchScoreTarget", fields: [targetPersonaId], references: [id])
-
-  @@unique([sourcePersonaId, targetPersonaId, algorithmVersion])
-
-  @@index([sourcePersonaId])
-  @@index([targetPersonaId])
-  @@index([totalScore])
-  @@index([generatedAt])
-}
 
 /// =========================================================
 /// SWIPE EVENTS
@@ -5217,7 +5252,150 @@ model NotificationQueue {
   @@index([scheduledFor])
 }
 
+///////////////////////////////////////////////////////////////
+// OBSERVABILITY + FORENSICS MODULE
+// Distributed tracing + audit-grade forensic reconstruction
+///////////////////////////////////////////////////////////////
 
+enum LogSeverity {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  CRITICAL
+}
+
+enum TraceSpanType {
+  HTTP
+  DB
+  CACHE
+  QUEUE
+  AUTH
+  INTERNAL
+  EXTERNAL_API
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ForensicEventType {
+  USER_ACTION
+  SYSTEM_EVENT
+  SECURITY_EVENT
+  FRAUD_EVENT
+  PAYMENT_EVENT
+}
+
+model DistributedTrace {
+  id              String @id @default(cuid())
+
+  traceId         String @unique
+  userId          String?
+
+  rootSpanId      String?
+
+  latencyMs       Int
+
+  success         Boolean @default(true)
+
+  createdAt       DateTime @default(now())
+
+  spans           TraceSpan[]
+
+  @@index([traceId])
+  @@index([userId])
+}
+
+model TraceSpan {
+  id              String @id @default(cuid())
+
+  traceId         String
+  parentSpanId    String?
+
+  spanType        TraceSpanType
+
+  operationName   String
+
+  startTime       DateTime
+  endTime         DateTime?
+
+  durationMs      Int?
+
+  metadata        Json?
+
+  trace           DistributedTrace @relation(fields: [traceId], references: [traceId])
+
+  @@index([traceId])
+  @@index([spanType])
+}
+
+model LogEvent {
+  id              String @id @default(cuid())
+
+  serviceName     String
+
+  severity        LogSeverity
+
+  message         String
+
+  userId          String?
+
+  traceId         String?
+
+  metadata        Json?
+
+  createdAt       DateTime @default(now())
+
+  @@index([serviceName, severity])
+  @@index([traceId])
+  @@index([createdAt])
+}
+
+model IncidentReport {
+  id              String @id @default(cuid())
+
+  title           String
+
+  description     String?
+
+  severity        IncidentSeverity
+
+  isResolved      Boolean @default(false)
+
+  assignedTo      String?
+
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+
+  forensicEvents  ForensicEvent[]
+
+  @@index([severity])
+  @@index([isResolved])
+}
+
+model ForensicEvent {
+  id              String @id @default(cuid())
+
+  eventType       ForensicEventType
+
+  userId          String?
+
+  traceId         String?
+
+  payload         Json
+
+  createdAt       DateTime @default(now())
+
+  incidentId      String?
+
+  @@index([eventType])
+  @@index([traceId])
+  @@index([userId])
+}
 
 /// =========================================================
 /// PARA_PAIR ENTERPRISE PAYMENTS & BILLING MODULE
@@ -5632,6 +5810,158 @@ model Payment {
   @@index([status])
   @@index([processedAt])
 }
+
+model BankAccount {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  accountName                     String
+
+  bankName                        String
+
+  accountNumberEncrypted          String
+
+  accountNumberLast4              String
+
+  routingNumberEncrypted          String?
+
+  swiftCode                       String?
+
+  iban                            String?
+
+  country                         String
+
+  currency                        String
+
+  isVerified                      Boolean                     @default(false)
+
+  verificationMethod              String?
+
+  verifiedAt                      DateTime?
+
+  isDefault                       Boolean                     @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  payouts                         Payout[]
+
+  @@index([workspaceId])
+  @@index([isDefault])
+}
+
+model WalletAccount {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  provider                        PaymentMethodType
+
+  mobileNumberEncrypted           String
+
+  mobileNumberLast4               String
+
+  accountName                     String?
+
+  isVerified                      Boolean                     @default(false)
+
+  verifiedAt                      DateTime?
+
+  isDefault                       Boolean                     @default(false)
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  payouts                         Payout[]
+
+  @@index([workspaceId])
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+  CANCELED
+}
+
+model Payout {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String
+
+  bankAccountId                   String?
+  walletAccountId                 String?
+
+  provider                        BillingProvider
+
+  amount                          Decimal                     @db.Decimal(12, 2)
+
+  currency                        String
+
+  status                          PayoutStatus                @default(PENDING)
+
+  externalReferenceId             String?
+
+  description                     String?
+
+  processedAt                     DateTime?
+
+  failedAt                        DateTime?
+
+  failureReason                   String?
+
+  metadata                        Json?
+
+  createdAt                       DateTime                    @default(now())
+  updatedAt                       DateTime                    @updatedAt
+
+  /// ---------- Relations ----------
+  workspace                       Workspace                   @relation(fields: [workspaceId], references: [id])
+
+  bankAccount                     BankAccount?                @relation(fields: [bankAccountId], references: [id])
+
+  walletAccount                   WalletAccount?              @relation(fields: [walletAccountId], references: [id])
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([processedAt])
+}
+
+model FinancialRiskEvent {
+  id                              String                      @id @default(uuid())
+
+  workspaceId                     String?
+
+  paymentId                       String?
+
+  payoutId                        String?
+
+  riskType                        String
+
+  riskScore                       Float
+
+  investigationStatus             String?
+
+  notes                           String?
+
+  createdAt                       DateTime                    @default(now())
+
+  @@index([workspaceId])
+  @@index([riskScore])
+}
+
 
 /// =========================================================
 /// REFUNDS
@@ -6334,35 +6664,6 @@ enum SearchEventType {
   IGNORE
 }
 
-model SearchDocument {
-  id              String   @id @default(cuid())
-
-  entityType      SearchEntityType
-  entityId        String
-
-  title           String?
-  content         String?
-  tags            String[]
-
-  language        String?
-
-  geoLat          Float?
-  geoLng          Float?
-
-  embeddingVector Unsupported("vector")?
-
-  popularityScore Float    @default(0)
-  trustScore      Float    @default(50)
-
-  isIndexed       Boolean  @default(true)
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([entityType, entityId])
-  @@index([popularityScore])
-  @@index([trustScore])
-}
 
 model SearchIndexShard {
   id              String @id @default(cuid())
@@ -6473,12 +6774,6 @@ model SearchRankingModel {
 /// ENUMS
 /// =========================================================
 
-enum RiskLevel {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
 
 enum SecurityEventType {
   LOGIN_SUCCESS
@@ -6501,28 +6796,8 @@ enum SecurityEventType {
   PRIVACY_REQUEST
 }
 
-enum DeviceTrustLevel {
-  TRUSTED
-  UNKNOWN
-  SUSPICIOUS
-  BLOCKED
-}
 
-enum ConsentType {
-  TERMS_OF_SERVICE
-  PRIVACY_POLICY
-  MARKETING_EMAIL
-  MARKETING_SMS
-  PROFILING
-  COOKIES
-  DATA_PROCESSING
-}
 
-enum ConsentStatus {
-  ACCEPTED
-  REVOKED
-  EXPIRED
-}
 
 enum PrivacyRequestType {
   ACCESS
@@ -6555,59 +6830,11 @@ enum ModerationActionType {
   RESTRICTION
 }
 
-enum FraudCaseStatus {
-  OPEN
-  MONITORING
-  CONFIRMED
-  DISMISSED
-}
 
 /// =========================================================
 /// SECURITY EVENTS
 /// =========================================================
 
-model SecurityEvent {
-  id                              String                      @id @default(uuid())
-
-  workspaceId                     String?
-  userId                          String?
-  personaId                       String?
-
-  eventType                       SecurityEventType
-
-  riskLevel                       RiskLevel                   @default(LOW)
-
-  ipAddress                       String?
-  userAgent                       String?
-
-  country                         String?
-  region                          String?
-  city                            String?
-
-  deviceFingerprint               String?
-
-  sessionId                       String?
-
-  correlationId                   String?
-
-  metadata                        Json?
-
-  occurredAt                      DateTime                    @default(now())
-
-  /// ---------- Relations ----------
-  workspace                       Workspace?                  @relation(fields: [workspaceId], references: [id])
-
-  user                            User?                       @relation(fields: [userId], references: [id])
-
-  persona                         Persona?                    @relation(fields: [personaId], references: [id])
-
-  @@index([workspaceId])
-  @@index([userId])
-  @@index([personaId])
-  @@index([eventType])
-  @@index([riskLevel])
-  @@index([occurredAt])
-}
 
 /// =========================================================
 /// DEVICE REGISTRY
@@ -6650,63 +6877,11 @@ model TrustedDevice {
 /// RATE LIMITING
 /// =========================================================
 
-model RateLimitBucket {
-  id                              String                      @id @default(uuid())
-
-  bucketKey                       String                      @unique
-
-  action                          String
-
-  requestCount                    Int                         @default(0)
-
-  windowStartedAt                 DateTime
-
-  expiresAt                       DateTime
-
-  blockedUntil                    DateTime?
-
-  metadata                        Json?
-
-  createdAt                       DateTime                    @default(now())
-
-  @@index([action])
-  @@index([expiresAt])
-  @@index([blockedUntil])
-}
 
 /// =========================================================
 /// CONSENT MANAGEMENT
 /// =========================================================
 
-model UserConsent {
-  id                              String                      @id @default(uuid())
-
-  userId                          String
-
-  consentType                     ConsentType
-
-  consentVersion                  String
-
-  status                          ConsentStatus               @default(ACCEPTED)
-
-  acceptedAt                      DateTime                    @default(now())
-
-  revokedAt                       DateTime?
-
-  expiresAt                       DateTime?
-
-  ipAddress                       String?
-  userAgent                       String?
-
-  evidencePayload                 Json?
-
-  /// ---------- Relations ----------
-  user                            User                        @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([consentType])
-  @@index([status])
-}
 
 /// =========================================================
 /// PRIVACY REQUESTS
@@ -6747,63 +6922,11 @@ model PrivacyRequest {
 /// DATA RETENTION POLICIES
 /// =========================================================
 
-model DataRetentionPolicy {
-  id                              String                      @id @default(uuid())
-
-  entityType                      String
-
-  retentionDays                   Int
-
-  archiveBeforeDeletion           Boolean                     @default(true)
-
-  legalHoldSupported              Boolean                     @default(true)
-
-  policyVersion                   String
-
-  isActive                        Boolean                     @default(true)
-
-  metadata                        Json?
-
-  createdAt                       DateTime                    @default(now())
-
-  @@unique([entityType, policyVersion])
-
-  @@index([entityType])
-  @@index([isActive])
-}
 
 /// =========================================================
 /// LEGAL HOLDS
 /// =========================================================
 
-model LegalHold {
-  id                              String                      @id @default(uuid())
-
-  workspaceId                     String?
-
-  userId                          String?
-
-  reason                          String
-
-  imposedByUserId                 String?
-
-  imposedAt                       DateTime                    @default(now())
-
-  releasedAt                      DateTime?
-
-  metadata                        Json?
-
-  /// ---------- Relations ----------
-  workspace                       Workspace?                  @relation(fields: [workspaceId], references: [id])
-
-  user                            User?                       @relation(fields: [userId], references: [id])
-
-  imposedByUser                   User?                       @relation("LegalHoldImposer", fields: [imposedByUserId], references: [id])
-
-  @@index([workspaceId])
-  @@index([userId])
-  @@index([releasedAt])
-}
 
 /// =========================================================
 /// MODERATION CASES
@@ -7004,18 +7127,7 @@ model ApiAccessAudit {
 /// ENUMS
 /// =========================================================
 
-enum WorkspaceType {
-  PERSONAL
-  BUSINESS
-  ENTERPRISE
-}
 
-enum WorkspaceStatus {
-  ACTIVE
-  SUSPENDED
-  ARCHIVED
-  DELETED
-}
 
 enum MembershipStatus {
   INVITED
@@ -7038,117 +7150,16 @@ enum PermissionEffect {
   DENY
 }
 
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  EXPIRED
-  REVOKED
-}
 
 /// =========================================================
 /// WORKSPACE
 /// =========================================================
 
-model Workspace {
-  id                          String                  @id @default(uuid())
-
-  /// ---------- Core ----------
-  type                        WorkspaceType
-  status                      WorkspaceStatus         @default(ACTIVE)
-
-  name                        String
-  slug                        String                  @unique
-
-  description                 String?
-
-  /// ---------- Ownership ----------
-  ownerUserId                 String
-
-  /// ---------- Branding ----------
-  logoUrl                     String?
-  bannerUrl                   String?
-  websiteUrl                  String?
-
-  /// ---------- Verification ----------
-  isVerified                  Boolean                 @default(false)
-  verifiedAt                  DateTime?
-
-  /// ---------- Enterprise ----------
-  taxId                       String?
-  registrationNumber          String?
-
-  /// ---------- Metadata ----------
-  metadata                    Json?
-
-  createdAt                   DateTime                @default(now())
-  updatedAt                   DateTime                @updatedAt
-  deletedAt                   DateTime?
-
-  /// ---------- Relations ----------
-  owner                       User                    @relation(fields: [ownerUserId], references: [id])
-
-  members                     WorkspaceMember[]
-  invitations                 WorkspaceInvitation[]
-
-  roles                       WorkspaceCustomRole[]
-  permissions                 WorkspacePermission[]
-
-  apiKeys                     WorkspaceApiKey[]
-
-  auditLogs                   WorkspaceAuditLog[]
-
-  complianceRecords           WorkspaceComplianceRecord[]
-
-  @@index([ownerUserId])
-  @@index([type])
-  @@index([status])
-  @@index([deletedAt])
-}
 
 /// =========================================================
 /// WORKSPACE MEMBERS
 /// =========================================================
 
-model WorkspaceMember {
-  id                          String                  @id @default(uuid())
-
-  workspaceId                 String
-  userId                      String
-
-  role                        WorkspaceRole
-
-  status                      MembershipStatus        @default(ACTIVE)
-
-  joinedAt                    DateTime                @default(now())
-
-  invitedByUserId             String?
-
-  /// ---------- Security ----------
-  lastAccessAt                DateTime?
-
-  /// ---------- Metadata ----------
-  metadata                    Json?
-
-  createdAt                   DateTime                @default(now())
-  updatedAt                   DateTime                @updatedAt
-
-  /// ---------- Relations ----------
-  workspace                   Workspace               @relation(fields: [workspaceId], references: [id])
-
-  user                        User                    @relation(fields: [userId], references: [id])
-
-  invitedByUser               User?                   @relation("WorkspaceInviter", fields: [invitedByUserId], references: [id])
-
-  assignedRoles               WorkspaceMemberRole[]
-
-  @@unique([workspaceId, userId])
-
-  @@index([workspaceId])
-  @@index([userId])
-  @@index([role])
-  @@index([status])
-}
 
 /// =========================================================
 /// CUSTOM ROLES
@@ -7257,112 +7268,16 @@ model WorkspaceRolePermission {
 /// WORKSPACE INVITATIONS
 /// =========================================================
 
-model WorkspaceInvitation {
-  id                          String                  @id @default(uuid())
-
-  workspaceId                 String
-
-  invitedEmail                String
-
-  role                        WorkspaceRole
-
-  invitationTokenHash         String                  @unique
-
-  status                      InvitationStatus        @default(PENDING)
-
-  expiresAt                   DateTime
-
-  acceptedAt                  DateTime?
-  declinedAt                  DateTime?
-  revokedAt                   DateTime?
-
-  invitedByUserId             String
-
-  createdAt                   DateTime                @default(now())
-
-  /// ---------- Relations ----------
-  workspace                   Workspace               @relation(fields: [workspaceId], references: [id])
-
-  invitedByUser               User                    @relation("WorkspaceInvitationSender", fields: [invitedByUserId], references: [id])
-
-  @@index([workspaceId])
-  @@index([invitedEmail])
-  @@index([status])
-  @@index([expiresAt])
-}
 
 /// =========================================================
 /// WORKSPACE API KEYS
 /// =========================================================
 
-model WorkspaceApiKey {
-  id                          String                  @id @default(uuid())
-
-  workspaceId                 String
-
-  name                        String
-
-  keyHash                     String                  @unique
-
-  lastUsedAt                  DateTime?
-
-  expiresAt                   DateTime?
-
-  revokedAt                   DateTime?
-
-  createdByUserId             String
-
-  createdAt                   DateTime                @default(now())
-
-  /// ---------- Security ----------
-  allowedIps                  String[]
-
-  scopes                      String[]
-
-  /// ---------- Relations ----------
-  workspace                   Workspace               @relation(fields: [workspaceId], references: [id])
-
-  createdByUser               User                    @relation("WorkspaceApiKeyCreator", fields: [createdByUserId], references: [id])
-
-  @@index([workspaceId])
-  @@index([expiresAt])
-}
 
 /// =========================================================
 /// WORKSPACE AUDIT LOGS
 /// =========================================================
 
-model WorkspaceAuditLog {
-  id                          String                  @id @default(uuid())
-
-  workspaceId                 String
-
-  actorUserId                 String?
-
-  action                      String
-
-  entityType                  String
-  entityId                    String
-
-  beforeState                 Json?
-  afterState                  Json?
-
-  ipAddress                   String?
-
-  correlationId               String?
-
-  createdAt                   DateTime                @default(now())
-
-  /// ---------- Relations ----------
-  workspace                   Workspace               @relation(fields: [workspaceId], references: [id])
-
-  actorUser                   User?                   @relation("WorkspaceAuditActor", fields: [actorUserId], references: [id])
-
-  @@index([workspaceId])
-  @@index([actorUserId])
-  @@index([entityType, entityId])
-  @@index([createdAt])
-}
 
 /// =========================================================
 /// COMPLIANCE RECORDS
@@ -7393,22 +7308,4 @@ model WorkspaceComplianceRecord {
 }
 
 // ================= SCHEMAS =================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

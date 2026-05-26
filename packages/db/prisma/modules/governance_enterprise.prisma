@@ -21,7 +21,7 @@ enum WorkspaceStatus {
   DELETED
 }
 
-enum WorkspaceMemberRole {
+enum WorkspaceGovernanceRole {
   OWNER
   ADMIN
   MANAGER
@@ -141,7 +141,7 @@ model WorkspaceMember {
 
   userId                          String
 
-  role                            WorkspaceMemberRole           @default(MEMBER)
+  role                            WorkspaceGovernanceRole           @default(MEMBER)
 
   invitedByUserId                 String?
 
@@ -176,7 +176,7 @@ model WorkspaceInvitation {
 
   invitedEmail                    String
 
-  invitedRole                     WorkspaceMemberRole
+  invitedRole                     WorkspaceGovernanceRole
 
   invitationTokenHash             String                          @unique
 
