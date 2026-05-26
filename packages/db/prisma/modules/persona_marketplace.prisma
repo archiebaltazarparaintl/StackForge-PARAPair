@@ -474,8 +474,8 @@ model ListingApplication {
 model PersonaBookmark {
   id                              String                  @id @default(uuid())
 
-  targetPersona                   Persona                 @relation("BookmarkTarget", ...)
-  sourcePersona                   Persona                 @relation("BookmarkSource", ...)
+  sourcePersonaId                 String
+  targetPersonaId                 String
 
   createdAt                       DateTime                @default(now())
 
@@ -489,7 +489,6 @@ model PersonaBookmark {
   @@index([sourcePersonaId])
   @@index([targetPersonaId])
 }
-
 model ListingBookmark {
   id                              String                  @id @default(uuid())
 
