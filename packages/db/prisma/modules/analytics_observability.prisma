@@ -161,6 +161,7 @@ model FeatureFlag {
   updatedAt                       DateTime                        @updatedAt
 
   assignments                     FeatureFlagAssignment[]
+  flagAssignments                 FlagAssignment[]
 
   @@index([enabled])
 }

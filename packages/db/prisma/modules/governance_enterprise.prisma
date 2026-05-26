@@ -124,6 +124,8 @@ model Workspace {
 
   securityEvents                  SecurityEvent[]
 
+  infraApiKeys                    ApiKey[]
+
   @@index([workspaceKey])
   @@index([slug])
   @@index([status])

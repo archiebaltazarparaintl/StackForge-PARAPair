@@ -526,7 +526,8 @@ model FeatureFlag {
   createdAt                       DateTime                        @default(now())
   updatedAt                       DateTime                        @updatedAt
 
-  assignments                     FeatureFlagAssignment[]         @relation(fields: [flagId], references: [id])
+  assignments                     FeatureFlagAssignment[]
+  flagAssignments                 FlagAssignment[]
 
   @@index([enabled])
 }
@@ -2305,7 +2306,7 @@ model Workspace {
 
   featureEntitlements             WorkspaceFeatureEntitlement[]
 
-  apiKeys                         WorkspaceApiKey[]              @relation(fields: [workspaceId], references: [id])
+  apiKeys                         WorkspaceApiKey[]
 
   auditLogs                       WorkspaceAuditLog[]
 
@@ -2322,6 +2323,8 @@ model Workspace {
   analyticsEvents                 AnalyticsEvent[]
 
   securityEvents                  SecurityEvent[]
+
+  infraApiKeys                    ApiKey[]
 
   @@index([workspaceKey])
   @@index([slug])
