@@ -114,6 +114,8 @@ model SearchQueryLog {
 model SearchEvent {
   id              String @id @default(cuid())
 
+  query       SearchQueryLog?  @relation(fields: [queryId], references: [id])
+
   queryId         String?
 
   userId          String?

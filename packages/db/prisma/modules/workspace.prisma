@@ -99,6 +99,7 @@ model Workspace {
   permissions                 WorkspacePermission[]
 
   apiKeys                     WorkspaceApiKey[]
+  apiKeys                     ApiKey[]
 
   auditLogs                   WorkspaceAuditLog[]
 

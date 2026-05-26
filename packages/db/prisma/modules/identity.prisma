@@ -535,6 +535,9 @@ model SecurityEvent {
   user                    User?               @relation(fields: [userId], references: [id])
   device                  Device?             @relation(fields: [deviceId], references: [id])
 
+  workspaceId   String?
+  workspace     Workspace?  @relation(fields: [workspaceId], references: [id])
+
   @@index([userId])
   @@index([deviceId])
   @@index([riskLevel])

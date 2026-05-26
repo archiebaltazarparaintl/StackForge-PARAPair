@@ -136,7 +136,10 @@ model ForensicEvent {
 
   createdAt       DateTime @default(now())
 
-  incidentId      String?
+  incidentReport  IncidentReport?  @relation(fields: [incidentReportId], references: [id])
+  incidentReportId  String?
+
+  
 
   @@index([eventType])
   @@index([traceId])

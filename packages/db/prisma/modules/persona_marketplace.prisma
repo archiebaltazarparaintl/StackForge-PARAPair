@@ -151,7 +151,8 @@ model Persona {
   reviewsReceived                 PersonaReview[]         @relation("ReviewTarget")
   reviewsWritten                  PersonaReview[]         @relation("ReviewAuthor")
 
-  bookmarks                       PersonaBookmark[]
+  bookmarksAsSource               PersonaBookmark[]       @relation("BookmarkSource")
+  bookmarksAsTarget               PersonaBookmark[]       @relation("BookmarkTarget")
 
   blocksGiven                     PersonaBlock[]          @relation("PersonaBlocker")
   blocksReceived                  PersonaBlock[]          @relation("PersonaBlocked")
@@ -473,8 +474,8 @@ model ListingApplication {
 model PersonaBookmark {
   id                              String                  @id @default(uuid())
 
-  sourcePersonaId                 String
-  targetPersonaId                 String
+  targetPersona                   Persona                 @relation("BookmarkTarget", ...)
+  sourcePersona                   Persona                 @relation("BookmarkSource", ...)
 
   createdAt                       DateTime                @default(now())
 
