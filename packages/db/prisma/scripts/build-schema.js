@@ -215,7 +215,24 @@ let finalSchema = deduplicateBlocks(combined);
 finalSchema = fixUniqueConstraints(finalSchema);
 
 // ✅ Auto-inject missing back-relations
-const targets = ["User", "Persona", "Workspace", "Message", "FeatureFlag", "SearchQueryLog", "PaymentMethod", "MatchScore", "BusinessContinuityPlan", "ForensicEvent"];
+const targets = [
+  "User",
+  "Persona", 
+  "Workspace",
+  "Message",
+  "FeatureFlag",
+  "SearchQueryLog",
+  "PaymentMethod",
+  "MatchScore",
+  "BusinessContinuityPlan",
+  "ForensicEvent",
+  "Listing",
+  "SecurityEvent",
+  "PersonaBookmark",
+  "SearchEvent",
+  "WorkspaceMember",
+  "IncidentReport",
+];
 for (const target of targets) {
   const relations = collectBackRelations(finalSchema, target);
   finalSchema = injectBackRelations(finalSchema, target, relations);
