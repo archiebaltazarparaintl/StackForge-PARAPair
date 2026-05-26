@@ -46,7 +46,7 @@ model FeatureFlag {
   updatedAt       DateTime @updatedAt
 
   assignments     FlagAssignment[]
-
+  
   @@index([key])
 }
 
