@@ -175,7 +175,9 @@ function injectBackRelations(content, targetModel, relations) {
     // Check which relations are already present
     const missing = injections.filter((line) => {
       const fieldName = line.trim().split(/\s+/)[0];
-      return !body.includes(fieldName);
+      const modelType = line.trim().split(/\s+/)[1]?.replace("[]", "").replace("?", "");
+      // Skip if field name exists OR if model type already has a relation in this block
+      return !body.includes(fieldName) && !body.includes(modelType + "[]") && !body.includes(modelType + "?") && !(body.includes(modelType + " ") && !line.includes("@relation"));
     });
 
     if (missing.length === 0) return match;

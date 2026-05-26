@@ -222,6 +222,9 @@ model MatchScore {
   @@index([personaAId])
   @@index([personaBId])
   @@index([compatibilityScore])
+
+  // ── auto-injected back-relations ──
+  match  Match[]
 }
 
 /// =========================================================
@@ -1116,6 +1119,9 @@ model BusinessContinuityPlan {
   updatedAt                       DateTime                        @updatedAt
 
   @@index([nextTestAt])
+
+  // ── auto-injected back-relations ──
+  disasterRecoveryTest  DisasterRecoveryTest[]
 }
 
 /// =========================================================
@@ -2321,6 +2327,21 @@ model Workspace {
   @@index([slug])
   @@index([status])
   @@index([deletedAt])
+
+  // ── auto-injected back-relations ──
+  recommendationCandidate  RecommendationCandidate[]
+  featureFlagAssignment  FeatureFlagAssignment[]
+  errorLog  ErrorLog[]
+  domainEvent  DomainEvent[]
+  workflowExecution  WorkflowExecution[]
+  bankAccount  BankAccount[]
+  walletAccount  WalletAccount[]
+  payout  Payout[]
+  persona  Persona[]
+  listing  Listing[]
+  workspaceCustomRole  WorkspaceCustomRole[]
+  workspacePermission  WorkspacePermission[]
+  workspaceComplianceRecord  WorkspaceComplianceRecord[]
 }
 
 /// =========================================================
@@ -3017,6 +3038,56 @@ model User {
   @@index([deletedAt])
   @@index([trustScore])
   @@index([createdAt])
+
+  // ── auto-injected back-relations ──
+  analyticsEvent  AnalyticsEvent[]
+  analyticsSession  AnalyticsSession[]
+  featureFlagAssignment  FeatureFlagAssignment[]
+  errorLog  ErrorLog[]
+  auditExportJob  AuditExportJob[]
+  recoveryJob  RecoveryJob[]
+  disasterRecoveryTest  DisasterRecoveryTest[]
+  domainEvent  DomainEvent[]
+  workflowExecution  WorkflowExecution[]
+  commandExecution  CommandExecution[]
+  idempotencyKey  IdempotencyKey[]
+  userDeviceFingerprint  UserDeviceFingerprint[]
+  userReputation  UserReputation[]
+  threatSignal  ThreatSignal[]
+  fraudInvestigationCase  FraudInvestigationCase[]
+  fraudInvestigationCase_FraudModerator  FraudInvestigationCase[]  @relation("FraudModerator")
+  abuseEnforcementAction_AbuseTargetUser  AbuseEnforcementAction[]  @relation("AbuseTargetUser")
+  abuseEnforcementAction_AbuseActionCreator  AbuseEnforcementAction[]  @relation("AbuseActionCreator")
+  linkedAccount  LinkedAccount[]
+  userVelocityMetric  UserVelocityMetric[]
+  shadowBan  ShadowBan[]
+  riskScoreHistory  RiskScoreHistory[]
+  workspaceMember  WorkspaceMember[]
+  workspaceMember_WorkspaceInviter  WorkspaceMember[]  @relation("WorkspaceInviter")
+  workspaceInvitation  WorkspaceInvitation[]
+  workspaceApiKey  WorkspaceApiKey[]
+  workspaceAuditLog  WorkspaceAuditLog[]
+  complianceDocument  ComplianceDocument[]
+  activityFeedItem_FeedOwner  ActivityFeedItem[]  @relation("FeedOwner")
+  activityFeedItem_FeedActor  ActivityFeedItem[]  @relation("FeedActor")
+  realtimeConnection  RealtimeConnection[]
+  messageDeliveryQueue  MessageDeliveryQueue[]
+  apiKey  ApiKey[]
+  mediaAsset  MediaAsset[]
+  userConsentRecord  UserConsentRecord[]
+  privacyPolicyVersion  PrivacyPolicyVersion[]
+  termsOfServiceVersion  TermsOfServiceVersion[]
+  dataSubjectRequest  DataSubjectRequest[]
+  userDataExport  UserDataExport[]
+  legalHold  LegalHold[]
+  lawEnforcementRequest  LawEnforcementRequest[]
+  cookieConsentRecord  CookieConsentRecord[]
+  trustedDevice  TrustedDevice[]
+  privacyRequest  PrivacyRequest[]
+  moderationCase_ModerationAssignee  ModerationCase[]  @relation("ModerationAssignee")
+  moderationAction  ModerationAction[]
+  fraudCase  FraudCase[]
+  fraudCase_FraudInvestigator  FraudCase[]  @relation("FraudInvestigator")
 }
 
 /// =========================================================
@@ -4606,7 +4677,7 @@ model Match {
 
   matchScoreId                    String?
 
-  createdBySwipeId                String?
+  createdBySwipeId                String?  @unique
 
   lastInteractionAt               DateTime?
 
@@ -4966,6 +5037,10 @@ model Message {
   @@index([createdAt])
   @@index([deletedAt])
   @@index([replyToMessageId])
+
+  // ── auto-injected back-relations ──
+  messageDeliveryQueue  MessageDeliveryQueue[]
+  moderationCase  ModerationCase[]
 }
 
 /// =========================================================
@@ -5567,6 +5642,9 @@ model PaymentMethod {
 
   @@index([billingCustomerId])
   @@index([isDefault])
+
+  // ── auto-injected back-relations ──
+  payment  Payment[]
 }
 
 /// =========================================================
@@ -6196,6 +6274,43 @@ model Persona {
   @@index([trustScore])
   @@index([isDiscoverable])
   @@index([deletedAt])
+
+  // ── auto-injected back-relations ──
+  recommendationCandidate_RecommendationOwner  RecommendationCandidate[]  @relation("RecommendationOwner")
+  recommendationCandidate_RecommendationTargetPersona  RecommendationCandidate[]  @relation("RecommendationTargetPersona")
+  recommendationFeedback  RecommendationFeedback[]
+  matchScore_MatchScorePersonaA  MatchScore[]  @relation("MatchScorePersonaA")
+  matchScore_MatchScorePersonaB  MatchScore[]  @relation("MatchScorePersonaB")
+  personalizationProfile  PersonalizationProfile[]
+  analyticsEvent  AnalyticsEvent[]
+  analyticsSession  AnalyticsSession[]
+  featureFlagAssignment  FeatureFlagAssignment[]
+  searchAnalytics  SearchAnalytics[]
+  feedGenerationJob  FeedGenerationJob[]
+  feedSnapshot  FeedSnapshot[]
+  feedCard_FeedCardSource  FeedCard[]  @relation("FeedCardSource")
+  feedCard_FeedCardTarget  FeedCard[]  @relation("FeedCardTarget")
+  swipeEvent_SwipeSource  SwipeEvent[]  @relation("SwipeSource")
+  swipeEvent_SwipeTarget  SwipeEvent[]  @relation("SwipeTarget")
+  match_MatchPersonaA  Match[]  @relation("MatchPersonaA")
+  match_MatchPersonaB  Match[]  @relation("MatchPersonaB")
+  matchInteraction  MatchInteraction[]
+  personaEmbedding  PersonaEmbedding[]
+  discoveryAnalytics  DiscoveryAnalytics[]
+  conversationParticipant  ConversationParticipant[]
+  message  Message[]
+  messageReceipt  MessageReceipt[]
+  messageReaction  MessageReaction[]
+  presence  Presence[]
+  typingIndicator  TypingIndicator[]
+  webSocketConnection  WebSocketConnection[]
+  pushNotificationDevice  PushNotificationDevice[]
+  notificationQueue  NotificationQueue[]
+  listingApplication  ListingApplication[]
+  listingBookmark  ListingBookmark[]
+  moderationCase  ModerationCase[]
+  moderationCase_ModerationReporter  ModerationCase[]  @relation("ModerationReporter")
+  fraudCase  FraudCase[]
 }
 
 /// =========================================================
