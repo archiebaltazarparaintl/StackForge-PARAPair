@@ -32,7 +32,7 @@ export class AuthService {
 
     await this.prisma.emailVerification.deleteMany({ where: { email } });
     await this.prisma.emailVerification.create({
-      data: { email, tokenHash, expiresAt, user: { connect: { id: userId } } },
+      data: { email, tokenHash, expiresAt },
     });
 
     await this.mailService.sendOtpEmail(email, otp);
