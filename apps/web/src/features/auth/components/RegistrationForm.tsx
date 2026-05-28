@@ -358,7 +358,7 @@ export default function RegisterForm() {
       );
 
       setTimeout(() => {
-        router.push('/feed/marketplace');
+        router.push('/marketplace');
       }, 1500);
     } catch (err: any) {
       showError(
