@@ -2987,9 +2987,7 @@ CREATE TABLE "SubscriptionPlan" (
 
     CONSTRAINT "SubscriptionPlan_pkey" PRIMARY KEY ("id")
 );
-ALTER TABLE "Subscription"
-ALTER COLUMN "status"
-SET DEFAULT 'TRIALING';
+
 -- CreateTable
 CREATE TABLE "BillingSubscription" (
     "id" TEXT NOT NULL,
@@ -3011,6 +3009,10 @@ CREATE TABLE "BillingSubscription" (
 
     CONSTRAINT "BillingSubscription_pkey" PRIMARY KEY ("id")
 );
+
+ALTER TABLE "BillingSubscription"
+ALTER COLUMN "status"
+SET DEFAULT 'TRIALING';
 
 -- CreateTable
 CREATE TABLE "Invoice" (
