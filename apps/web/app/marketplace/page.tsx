@@ -26,7 +26,7 @@ import dynamic from 'next/dynamic';
 
 // Components
 import SwipeFeed from '@/components/marketplace/SwipeFeed';
-import PurposeToggle from '@/components/marketplace/SwipeFeed';
+import PurposeToggle from '@/components/marketplace/PurposeToggle';
 
 const MatchOverlay = dynamic(() => import('../../src/components/marketplace/MatchOverlay'), { ssr: false });
 const CardDetailsSheet = dynamic(() => import('../../src/components/marketplace/CardDetailsSheet'), { ssr: false });
