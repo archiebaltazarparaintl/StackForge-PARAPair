@@ -185,7 +185,7 @@ export default function MarketplacePage() {
           </button>
         </div>
         <button key="nav-m" onClick={() => router.push('/messages')} className="text-slate-400 hover:text-[#FF7A00] active:scale-90 transition-all"><MessageCircle size={22} strokeWidth={2.5} /></button>
-        <button key="nav-d" onClick={() => router.push('/dashboard')} className="text-slate-400 hover:text-[#0EA5A5] active:scale-90 transition-all"><UserCircle size={22} strokeWidth={2.5} /></button>
+        <button key="nav-d" onClick={() => router.push('/dashboard/personal')} className="text-slate-400 hover:text-[#0EA5A5] active:scale-90 transition-all"><UserCircle size={22} strokeWidth={2.5} /></button>
       </nav>
 
       <AnimatePresence>
