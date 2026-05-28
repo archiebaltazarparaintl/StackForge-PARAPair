@@ -5058,10 +5058,19 @@ model Message {
 
   receipts                        MessageReceipt[]
 
-  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replyToMessage Message?
+  @relation(
+    "MessageReplies",
+    fields: [replyToMessageId],
+    references: [id],
+    onDelete: NoAction,
+    onUpdate: NoAction
+  )
 
-  replies                         Message[]                     @relation("MessageReplies")
+replies Message[]
+  @relation("MessageReplies")
 
+  
   reactions                       MessageReaction[]
 
   moderationEvents                MessageModerationEvent[]
