@@ -5,6 +5,10 @@
   "types": "./src/index.ts",
   "private": true,
   "devDependencies": {
-    "@types/node": "^24.12.4"
+    "@types/node": "^24.12.4",
+    "prisma": "^6.19.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
   }
 }
