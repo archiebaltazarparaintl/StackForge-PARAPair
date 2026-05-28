@@ -3245,7 +3245,7 @@ model RefreshToken {
 model EmailVerification {
   id                      String              @id @default(uuid())
 
-  userId                  String
+  userId                  String?
 
   email                   String
   tokenHash               String              @unique
@@ -3262,7 +3262,7 @@ model EmailVerification {
   requestIp               String?
 
   /// ---------- Relations ----------
-  user                    User                @relation(fields: [userId], references: [id])
+  user                    User?                @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([email])

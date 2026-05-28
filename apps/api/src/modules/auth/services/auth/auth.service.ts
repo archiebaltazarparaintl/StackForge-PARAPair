@@ -27,12 +27,12 @@ export class AuthService {
 
   async sendOtp(email: string) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await bcrypt.hash(otp, 10);
+    const tokenHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    await this.prisma.otpVerification.deleteMany({ where: { email } });
-    await this.prisma.otpVerification.create({
-      data: { email, otpHash, expiresAt },
+    await this.prisma.emailVerification.deleteMany({ where: { email } });
+    await this.prisma.emailVerification.create({
+      data: { email, tokenHash, expiresAt, user: { connect: { id: userId } } },
     });
 
     await this.mailService.sendOtpEmail(email, otp);
