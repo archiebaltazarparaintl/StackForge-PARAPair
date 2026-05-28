@@ -2987,7 +2987,9 @@ CREATE TABLE "SubscriptionPlan" (
 
     CONSTRAINT "SubscriptionPlan_pkey" PRIMARY KEY ("id")
 );
-
+ALTER TABLE "Subscription"
+ALTER COLUMN "status"
+SET DEFAULT 'TRIALING';
 -- CreateTable
 CREATE TABLE "BillingSubscription" (
     "id" TEXT NOT NULL,
@@ -2995,7 +2997,7 @@ CREATE TABLE "BillingSubscription" (
     "subscriptionPlanId" TEXT NOT NULL,
     "provider" "BillingProvider" NOT NULL,
     "providerSubscriptionId" TEXT NOT NULL,
-    "status" "SubscriptionStatus" NOT NULL DEFAULT 'TRIALING',
+    "status" "SubscriptionStatus" NOT NULL,
     "startedAt" TIMESTAMP(3) NOT NULL,
     "currentPeriodStart" TIMESTAMP(3) NOT NULL,
     "currentPeriodEnd" TIMESTAMP(3) NOT NULL,
