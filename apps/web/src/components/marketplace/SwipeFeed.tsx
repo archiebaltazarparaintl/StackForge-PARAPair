@@ -150,7 +150,7 @@ const SwipeFeed = forwardRef(({ mode, onMatch, onExpand, myIdentity = 'personal'
   }));
 
   return (
-    <div className="relative w-full max-w-[360px] h-[610px] flex flex-col items-center">
+    <div className="hidden relative w-full max-w-[360px] h-[610px] flex flex-col items-center">
       <div className="relative w-full h-[520px] perspective-1000">
         <AnimatePresence mode="popLayout">
           {item ? (
