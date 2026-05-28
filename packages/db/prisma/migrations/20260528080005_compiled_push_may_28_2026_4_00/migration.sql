@@ -76,6 +76,11 @@
   - Added the required column `primaryEmail` to the `User` table without a default value. This is not possible if the table is not empty.
 
 */
+
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
 -- CreateEnum
 CREATE TYPE "RecommendationType" AS ENUM ('MATCH', 'LISTING', 'BUSINESS', 'PERSONA', 'CONTENT');
 
@@ -804,6 +809,7 @@ DROP TYPE "SwipeType";
 
 -- DropEnum
 DROP TYPE "UserRole";
+
 
 -- CreateTable
 CREATE TABLE "RecommendationCandidate" (
@@ -3009,10 +3015,6 @@ CREATE TABLE "BillingSubscription" (
 
     CONSTRAINT "BillingSubscription_pkey" PRIMARY KEY ("id")
 );
-
-ALTER TABLE "BillingSubscription"
-ALTER COLUMN "status"
-SET DEFAULT 'TRIALING';
 
 -- CreateTable
 CREATE TABLE "Invoice" (
