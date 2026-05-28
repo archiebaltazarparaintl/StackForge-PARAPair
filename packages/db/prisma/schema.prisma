@@ -1,13 +1,14 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native"]
   output   = "../generated"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  ///directUrl = env("DIRECT_URL")
 }
 
 
@@ -2975,7 +2976,32 @@ enum TokenType {
 model User {
   id                      String              @id @default(uuid())
 
+  role                    String              @default("USER")
+
+bio                     String?
+avatarUrl               String?
+
+location                String?
+
+interestTags            String[]
+
+cvUrl                   String?
+
+businessName            String?
+businessField           String?
+businessServices        String?
+
+isBusinessAccount       Boolean             @default(false)
+
+profileCompleted        Boolean             @default(false)
+
+lastActiveAt            DateTime?
+
   /// ---------- Core Identity ----------
+  fullname                String
+  normalizeFullname       String
+  birthdate               DateTime            @default(now())
+
   primaryEmail            String              @unique
   normalizedEmail         String              @unique
 
@@ -3220,7 +3246,7 @@ model RefreshToken {
 model EmailVerification {
   id                      String              @id @default(uuid())
 
-  userId                  String
+  userId                  String?
 
   email                   String
   tokenHash               String              @unique
@@ -3237,7 +3263,7 @@ model EmailVerification {
   requestIp               String?
 
   /// ---------- Relations ----------
-  user                    User                @relation(fields: [userId], references: [id])
+  user                    User?                @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([email])
@@ -5032,9 +5058,10 @@ model Message {
 
   receipts                        MessageReceipt[]
 
-  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   replies                         Message[]                     @relation("MessageReplies")
+
 
   reactions                       MessageReaction[]
 

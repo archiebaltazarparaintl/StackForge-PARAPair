@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
+import 'dotenv/config';
+import { ConfigModule } from '@nestjs/config';
 import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -20,6 +22,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  ConfigModule.forRoot({
+    isGlobal: true,
+    envFilePath: '../../.env',
+  });
 
   await app.listen(3001);
 }

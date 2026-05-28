@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   UnauthorizedException,
@@ -23,12 +24,17 @@ export class AuthService {
 
   async sendOtp(email: string) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await bcrypt.hash(otp, 10);
+    const tokenHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    await this.prisma.otpVerification.deleteMany({ where: { email } });
-    await this.prisma.otpVerification.create({
-      data: { email, otpHash, expiresAt },
+    await this.prisma.emailVerification.deleteMany({ where: { email } });
+    await this.prisma.emailVerification.create({
+      data: {
+        email,
+        tokenHash,
+        expiresAt,
+        user: undefined,
+      },
     });
 
     await this.mailService.sendOtpEmail(email, otp);
@@ -37,7 +43,7 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const existingEmail = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { normalizedEmail: dto.email },
     });
     if (existingEmail) throw new ConflictException('Email already in use');
 
@@ -46,8 +52,8 @@ export class AuthService {
     });
     if (existingUsername) throw new ConflictException('Username already taken');
 
-    const otpRecord = await this.prisma.otpVerification.findFirst({
-      where: { email: dto.email, verified: false },
+    const otpRecord = await this.prisma.emailVerification.findFirst({
+      where: { email: dto.email, verifiedAt: null },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -56,24 +62,29 @@ export class AuthService {
     if (otpRecord.expiresAt < new Date())
       throw new BadRequestException('OTP has expired');
 
-    const otpValid = await bcrypt.compare(dto.otpCode, otpRecord.otpHash);
+    const otpValid = await bcrypt.compare(dto.otpCode, otpRecord.tokenHash);
     if (!otpValid) throw new BadRequestException('Invalid OTP');
 
-    await this.prisma.otpVerification.update({
+    await this.prisma.emailVerification.update({
       where: { id: otpRecord.id },
-      data: { verified: true },
+      data: { verifiedAt: new Date(Date.now()) },
     });
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
-        username: dto.username,
         fullname: dto.fullname,
-        birthDate: new Date(dto.birthDate),
-        passwordHash,
-        isVerified: true,
+        normalizeFullname: dto.fullname.toLowerCase(),
+
+        primaryEmail: dto.email,
+        normalizedEmail: dto.email.toLowerCase(),
+
+        username: dto.username,
+
+        birthdate: new Date(),
+
+        passwordHash: passwordHash,
       },
     });
 
@@ -85,7 +96,7 @@ export class AuthService {
         id: user.id,
         fullname: user.fullname,
         username: user.username,
-        email: user.email,
+        email: user.normalizedEmail,
       },
     };
   }
@@ -119,7 +130,7 @@ export class AuthService {
         id: user.id,
         fullname: user.fullname,
         username: user.username,
-        email: user.email,
+        email: user.normalizedEmail,
       },
     };
   }
