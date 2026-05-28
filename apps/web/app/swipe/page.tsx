@@ -1,328 +1,101 @@
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable react-hooks/immutability */
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
+import SwipeFeed from '@/components/marketplace/SwipeFeed';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 
-import Image from 'next/image';
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 
-import { motion, AnimatePresence } from 'framer-motion';
-
-import {
-  Heart,
-  X,
-  MapPin,
-  BriefcaseBusiness,
-} from 'lucide-react';
-
-type UserCard = {
-  id: string;
-
-  fullname: string;
-
-  personalProfile: {
-    bio: string | null;
-    location: string | null;
-    interests: string[];
-    education: string | null;
-  } | null;
-
-  media: {
-    url: string;
-  }[];
-};
-
-export default function SwipePage() {
-  const [users, setUsers] = useState<UserCard[]>([]);
-
-  const [loading, setLoading] = useState(true);
-
-  const [matchedUser, setMatchedUser] = useState<UserCard | null>(null);
+export default function SwipePreviewPage() {
+  const router = useRouter();
+  const [swipeCount, setSwipeCount] = useState(0);
+  const [myRole, setMyRole] = useState<'personal' | 'business'>('personal');
+  const [myInterests, setMyInterests] = useState<string[]>([]);
+  const maxFreeSwipes = 5;
 
   useEffect(() => {
-    fetchFeed();
+    // 1. Get Role
+    const savedRole = localStorage.getItem('selected-role');
+    if (savedRole === 'business' || savedRole === 'personal') setMyRole(savedRole);
+
+    // 2. Get Interests
+    const savedInterests = localStorage.getItem('user-interests');
+    if (savedInterests) {
+      try {
+        setMyInterests(JSON.parse(savedInterests));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        console.error("Failed to parse interests");
+      }
+    }
   }, []);
 
-  const fetchFeed = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/swipe/feed`,
-        {
-          credentials: 'include',
-        },
-      );
+  const discoveryMode = myRole === 'business' ? 'people' : 'organizations';
 
-      const data = await res.json();
-
-      setUsers(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleSwipeDetection = () => {
+    const nextCount = swipeCount + 1;
+    setSwipeCount(nextCount);
+    if (nextCount >= maxFreeSwipes) {
+      setTimeout(() => router.push('/match-results'), 800);
     }
   };
-
-  const handleSwipe = async (
-    receiverId: string,
-    type: 'LEFT' | 'RIGHT',
-  ) => {
-    const currentUser = users[0];
-
-    setUsers((prev) => prev.slice(1));
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/swipe`,
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-          },
-
-          credentials: 'include',
-
-          body: JSON.stringify({
-            receiverId,
-            type,
-          }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (data.matched) {
-        setMatchedUser(currentUser);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const current = users[0];
 
   return (
-    <div className="min-h-screen bg-[#FFFDFC] flex items-center justify-center px-4 py-10 overflow-hidden">
+    <div className={`${jakarta.className} min-h-screen bg-[#F8FBFC] overflow-hidden flex flex-col items-center relative text-[#0D1B2A]`}>
+      
+      {/* 1. PROGRESS */}
+      <div className="fixed top-0 left-0 w-full h-2 bg-slate-100 z-50">
+        <motion.div 
+          className={`h-full transition-colors duration-500 ${myRole === 'personal' ? 'bg-[#0EA5A5]' : 'bg-[#FF7A00]'}`}
+          initial={{ width: "0%" }}
+          animate={{ width: `${(swipeCount / maxFreeSwipes) * 100}%` }}
+        />
+      </div>
 
-      {/* MATCH MODAL */}
-      <AnimatePresence>
-        {matchedUser && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{
-                scale: 0.7,
-                opacity: 0,
-              }}
-              animate={{
-                scale: 1,
-                opacity: 1,
-              }}
-              exit={{
-                scale: 0.7,
-                opacity: 0,
-              }}
-              className="bg-white rounded-[40px] p-8 max-w-sm w-full text-center"
-            >
-              <h2 className="text-4xl font-black bg-gradient-to-r from-[#FF7A00] to-[#FFB547] text-transparent bg-clip-text">
-                IT'S A MATCH!
-              </h2>
-
-              <div className="mt-6 flex justify-center">
-                <div className="relative">
-                  <Image
-                    src={
-                      matchedUser.media?.[0]?.url ||
-                      'https://images.unsplash.com/photo-1494790108377-be9c29b29330'
-                    }
-                    alt="match"
-                    width={120}
-                    height={120}
-                    className="rounded-full object-cover w-32 h-32 border-4 border-[#FFB547]"
-                  />
-
-                  <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-[#FF7A00] flex items-center justify-center text-white">
-                    <Heart fill="white" />
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="mt-5 text-2xl font-bold">
-                {matchedUser.fullname}
-              </h3>
-
-              <p className="text-gray-500 mt-2">
-                You both liked each other.
-              </p>
-
-              <button
-                onClick={() => setMatchedUser(null)}
-                className="mt-6 h-12 w-full rounded-2xl bg-gradient-to-r from-[#FF7A00] to-[#FFB547] text-white font-semibold"
-              >
-                Continue Swiping
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* LOADING */}
-      {loading && (
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#FFB547] border-t-transparent rounded-full animate-spin mx-auto" />
-
-          <p className="mt-4 text-gray-500">
-            Loading profiles...
-          </p>
+      {/* 2. HEADER */}
+      <header className="py-12 text-center z-10 px-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-[#E1E8ED] rounded-full shadow-sm mb-6">
+          <Sparkles size={14} className="text-[#FF7A00] animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+             Personalized for your interests
+          </span>
         </div>
-      )}
 
-      {/* EMPTY */}
-      {!loading && users.length === 0 && (
-        <div className="text-center">
-          <h2 className="text-3xl font-bold">
-            No more profiles
-          </h2>
-
-          <p className="text-gray-500 mt-2">
-            Come back later for more matches.
-          </p>
+        <h1 className="text-4xl font-[900] italic uppercase tracking-tighter leading-none mb-4">
+          Marketplace <span className={myRole === 'personal' ? 'text-[#0EA5A5]' : 'text-[#FF7A00]'}>Preview</span>
+        </h1>
+        
+        {/* Chips to show what we are filtering by */}
+        <div className="flex flex-wrap justify-center gap-2 max-w-sm mx-auto opacity-60">
+           {myInterests.slice(0, 3).map(int => (
+             <span key={int} className="text-[8px] font-black uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">
+               {int}
+             </span>
+           ))}
+           {myInterests.length > 3 && <span className="text-[8px] font-black uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">+{myInterests.length - 3} More</span>}
         </div>
-      )}
+      </header>
 
-      {/* CARD */}
-      {!loading && current && (
-        <div className="w-full max-w-md">
+      {/* 3. THE DYNAMIC FEED */}
+      <main className="flex-1 flex items-center justify-center w-full pb-32">
+        <SwipeFeed 
+          mode={discoveryMode} 
+          myIdentity={myRole}
+          interestFilter={myInterests} // PASSING THE INTERESTS
+          onMatch={handleSwipeDetection} 
+          key={`${myRole}-${myInterests.length}`}
+        />
+      </main>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.id}
-              initial={{
-                opacity: 0,
-                scale: 0.9,
-                y: 40,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.8,
-                x: -200,
-              }}
-              transition={{
-                duration: 0.35,
-              }}
-              className="bg-white rounded-[38px] overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.12)] border border-[#F1F1F1]"
-            >
-
-              {/* IMAGE */}
-              <div className="relative h-[520px]">
-
-                <Image
-                  src={
-                    current.media?.[0]?.url ||
-                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330'
-                  }
-                  alt={current.fullname}
-                  fill
-                  className="object-cover"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h2 className="text-4xl font-bold">
-                    {current.fullname}
-                  </h2>
-
-                  {current.personalProfile?.location && (
-                    <div className="flex items-center gap-2 mt-2 text-white/90">
-                      <MapPin size={18} />
-
-                      <span>
-                        {current.personalProfile.location}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* CONTENT */}
-              <div className="p-6">
-
-                {current.personalProfile?.bio && (
-                  <p className="text-gray-700 leading-relaxed">
-                    {current.personalProfile.bio}
-                  </p>
-                )}
-
-                {current.personalProfile?.education && (
-                  <div className="mt-4 flex items-center gap-2 text-gray-600">
-                    <BriefcaseBusiness size={18} />
-
-                    <span>
-                      {current.personalProfile.education}
-                    </span>
-                  </div>
-                )}
-
-                {/* INTERESTS */}
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {current.personalProfile?.interests?.map(
-                    (interest) => (
-                      <span
-                        key={interest}
-                        className="px-4 py-2 rounded-full bg-[#FFF1E4] text-[#FF7A00] text-sm font-semibold"
-                      >
-                        {interest}
-                      </span>
-                    ),
-                  )}
-                </div>
-
-                {/* ACTIONS */}
-                <div className="mt-8 flex items-center justify-center gap-5">
-
-                  <button
-                    onClick={() =>
-                      handleSwipe(current.id, 'LEFT')
-                    }
-                    className="w-16 h-16 rounded-full bg-white border border-[#EAEAEA] shadow-lg flex items-center justify-center"
-                  >
-                    <X
-                      size={28}
-                      className="text-[#FF4D6D]"
-                    />
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleSwipe(current.id, 'RIGHT')
-                    }
-                    className="w-20 h-20 rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FFB547] shadow-2xl flex items-center justify-center"
-                  >
-                    <Heart
-                      size={34}
-                      fill="white"
-                      className="text-white"
-                    />
-                  </button>
-
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-
-        </div>
-      )}
+      {/* 4. BACKGROUND DECORATIVE */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#0EA5A5]/5 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[#FF7A00]/5 blur-[120px]" />
+      </div>
     </div>
   );
 }
-
