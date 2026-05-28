@@ -36,6 +36,7 @@ export class AuthService {
         email,
         tokenHash,
         expiresAt,
+        user: undefined,
       },
     });
 

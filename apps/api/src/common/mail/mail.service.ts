@@ -1,35 +1,34 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
-
+import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private transporter = nodemailer.createTransport({
-    service: 'gmail',
+  private transporter;
 
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  constructor(private readonly config: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: this.config.get<string>('EMAIL_USER'),
+        pass: this.config.get<string>('EMAIL_PASS'),
+      },
+    });
+  }
 
-  async sendOtpEmail(email: string, otp: string) {
-    await this.transporter.sendMail({
-      from: `"PARAPair Security" <${process.env.EMAIL_USER}>`,
-
+  sendOtpEmail(email: string, otp: string) {
+    return this.transporter.sendMail({
+      from: `"PARAPair Security" <${this.config.get('EMAIL_USER')}>`,
       to: email,
-
       subject: 'Your PARAPair Verification Code',
-
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color:#0EA5A5;">
-            Verify Your Account
-          </h2>
+          <h2 style="color:#0EA5A5;">Verify Your Account</h2>
 
-          <p>
-            Your OTP verification code is:
-          </p>
+          <p>Your OTP verification code is:</p>
 
           <div style="
             font-size: 32px;
@@ -41,13 +40,10 @@ export class MailService {
             ${otp}
           </div>
 
-          <p>
-            This code expires in 5 minutes.
-          </p>
+          <p>This code expires in 5 minutes.</p>
 
           <p style="color: gray; font-size: 12px;">
-            If you didn't request this,
-            please ignore this email.
+            If you didn't request this, please ignore this email.
           </p>
         </div>
       `,
