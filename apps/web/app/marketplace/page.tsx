@@ -28,8 +28,8 @@ import dynamic from 'next/dynamic';
 import SwipeFeed from '@/components/marketplace/SwipeFeed';
 import PurposeToggle from '@/components/marketplace/PurposeToggle';
 
-const MatchOverlay = dynamic(() => import('../../src/components/marketplace/MatchOverlay'), { ssr: false });
-const CardDetailsSheet = dynamic(() => import('../../src/components/marketplace/CardDetailsSheet'), { ssr: false });
+const MatchOverlay = dynamic(() => import('@/components/marketplace/MatchOverlay'), { ssr: false });
+const CardDetailsSheet = dynamic(() => import('@/components/marketplace/CardDetailsSheet'), { ssr: false });
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
