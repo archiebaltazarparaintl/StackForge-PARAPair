@@ -1,2 +1,3 @@
-export * from "./client"
-export * from "./auth"
+export * from '@prisma/client';
+export * from "./client";
+export * from "./auth";
