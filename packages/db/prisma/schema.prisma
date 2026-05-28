@@ -2975,6 +2975,27 @@ enum TokenType {
 model User {
   id                      String              @id @default(uuid())
 
+  role                    String              @default("USER")
+
+bio                     String?
+avatarUrl               String?
+
+location                String?
+
+interestTags            String[]
+
+cvUrl                   String?
+
+businessName            String?
+businessField           String?
+businessServices        String?
+
+isBusinessAccount       Boolean             @default(false)
+
+profileCompleted        Boolean             @default(false)
+
+lastActiveAt            DateTime?
+
   /// ---------- Core Identity ----------
   fullname                String
   normalizeFullname       String
