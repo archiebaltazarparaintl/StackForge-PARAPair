@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   Injectable,
   UnauthorizedException,
@@ -55,8 +52,8 @@ export class AuthService {
     });
     if (existingUsername) throw new ConflictException('Username already taken');
 
-    const otpRecord = await this.prisma.otpVerification.findFirst({
-      where: { email: dto.email, verified: false },
+    const otpRecord = await this.prisma.emailVerification.findFirst({
+      where: { email: dto.email, verifiedAt: null },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -65,12 +62,12 @@ export class AuthService {
     if (otpRecord.expiresAt < new Date())
       throw new BadRequestException('OTP has expired');
 
-    const otpValid = await bcrypt.compare(dto.otpCode, otpRecord.otpHash);
+    const otpValid = await bcrypt.compare(dto.otpCode, otpRecord.tokenHash);
     if (!otpValid) throw new BadRequestException('Invalid OTP');
 
-    await this.prisma.otpVerification.update({
+    await this.prisma.emailVerification.update({
       where: { id: otpRecord.id },
-      data: { verified: true },
+      data: { verifiedAt: new Date(Date.now()) },
     });
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
