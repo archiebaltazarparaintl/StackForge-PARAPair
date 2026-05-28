@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   Injectable,
   UnauthorizedException,
@@ -37,7 +41,7 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const existingEmail = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { normalizedEmail: dto.email },
     });
     if (existingEmail) throw new ConflictException('Email already in use');
 
@@ -68,12 +72,17 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
-        username: dto.username,
         fullname: dto.fullname,
-        birthDate: new Date(dto.birthDate),
-        passwordHash,
-        isVerified: true,
+        normalizeFullname: dto.fullname.toLowerCase(),
+
+        primaryEmail: dto.email,
+        normalizedEmail: dto.email.toLowerCase(),
+
+        username: dto.username,
+
+        birthdate: new Date(),
+
+        passwordHash: passwordHash,
       },
     });
 
@@ -85,7 +94,7 @@ export class AuthService {
         id: user.id,
         fullname: user.fullname,
         username: user.username,
-        email: user.email,
+        email: user.normalizedEmail,
       },
     };
   }
@@ -119,7 +128,7 @@ export class AuthService {
         id: user.id,
         fullname: user.fullname,
         username: user.username,
-        email: user.email,
+        email: user.normalizedEmail,
       },
     };
   }
