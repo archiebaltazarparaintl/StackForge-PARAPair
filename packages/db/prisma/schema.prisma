@@ -7,7 +7,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  ///directUrl = env("DIRECT_URL")
   relationMode = "prisma"
 }
 
@@ -5058,7 +5058,7 @@ model Message {
 
   receipts                        MessageReceipt[]
 
-  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replyToMessage                  Message?                      @relation("MessageReplies", fields: [replyToMessageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   replies                         Message[]                     @relation("MessageReplies")
 
